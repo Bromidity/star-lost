@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{physics::AngularVelocity, ship::AngularImpulse};
+use crate::{
+    physics::{AngularVelocity, Velocity},
+    ship::{AngularImpulse, Impulse},
+};
 
 #[derive(Component)]
 pub struct TargetEntity(pub Entity);
@@ -19,7 +22,8 @@ pub struct TrackingPlugin;
 impl Plugin for TrackingPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(targeting_entity_system)
-            .add_system(targeting_system);
+            .add_system(angular_targeting_system)
+            .add_system(approach_system);
     }
 }
 
@@ -34,10 +38,10 @@ pub fn targeting_entity_system(
     }
 }
 
-pub fn targeting_system(
+pub fn angular_targeting_system(
     mut query: Query<(&mut AngularImpulse, &AngularVelocity, &Transform, &Target)>,
 ) {
-    for (mut angular_acceleration, angular_velocity, transform, target) in query.iter_mut() {
+    for (mut angular_impulse, angular_velocity, transform, target) in query.iter_mut() {
         // point_at is the target Orientation
         let mut point_at = Transform::from_translation(transform.translation);
         point_at.look_at(target.0, Vec3::Y);
@@ -51,6 +55,25 @@ pub fn targeting_system(
 
         // Get the difference between target Orientation and current Orientation, expressed
         let (diff, _) = diff.to_axis_angle();
-        angular_acceleration.0 = diff - angular_velocity.0 * 3.0
+        angular_impulse.0 = (diff - angular_velocity.0 * 3.0).normalize()
+    }
+}
+
+pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
+    for (mut impulse, velocity, transform, target) in query.iter_mut() {
+        
+        let mut point_at = Transform::from_translation(transform.translation);
+        point_at.look_at(target.0, Vec3::Y);
+
+        // If we're pointing more or less directly at the target, accelerate
+        // otherwise, slow down.
+        let dist_diff = point_at.rotation.angle_between(transform.rotation);
+        let speed = if dist_diff < 1.0 {
+            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff])
+        } else {
+            velocity.0 * 10.0
+        };
+
+        impulse.0 = -speed;
     }
 }
