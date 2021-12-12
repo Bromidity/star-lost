@@ -16,7 +16,6 @@ impl Plugin for ControlsPlugin {
     }
 }
 
-/// Grabs the cursor when game first starts
 fn initial_grab_cursor(mut windows: ResMut<Windows>) {
     let window = windows.get_primary_mut().unwrap();
     window.set_cursor_lock_mode(true);
