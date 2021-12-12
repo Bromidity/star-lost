@@ -61,7 +61,6 @@ pub fn angular_targeting_system(
 
 pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
-        
         let mut point_at = Transform::from_translation(transform.translation);
         point_at.look_at(target.0, Vec3::Y);
 

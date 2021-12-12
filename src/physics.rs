@@ -17,6 +17,8 @@ pub struct AngularAcceleration(pub Vec3);
 
 #[derive(Bundle, Default)]
 pub struct PhysicsBundle {
+    pub transform: Transform,
+    pub global_transform: GlobalTransform,
     pub drag: Drag,
     pub velocity: Velocity,
     pub acceleration: Acceleration,

@@ -30,11 +30,11 @@ impl Default for ThrustCharacteristics {
 
 #[derive(Default, Bundle)]
 pub struct ShipBundle {
-    impulse: Impulse,
-    angular_impulse: AngularImpulse,
-    thrust_characteristics: ThrustCharacteristics,
+    pub impulse: Impulse,
+    pub angular_impulse: AngularImpulse,
+    pub thrust_characteristics: ThrustCharacteristics,
     #[bundle]
-    physics: PhysicsBundle,
+    pub physics: PhysicsBundle,
 }
 
 pub struct ShipPlugin;
@@ -93,18 +93,11 @@ pub fn angular_impulse_system(
 }
 
 pub fn spawn_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let scene = asset_server.load("ship.glb#Scene0");
+    let model = asset_server.load("ship.glb#Scene0");
 
     let id = {
         commands
-            .spawn_bundle((
-                Transform::from_xyz(0.0, 5.0, 0.0),
-                GlobalTransform::identity(),
-            ))
-            .with_children(|parent| {
-                parent.spawn_scene(scene.clone());
-            })
-            .insert_bundle(ShipBundle {
+            .spawn_bundle(ShipBundle {
                 impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
                 angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 5.0, 0.0])),
                 thrust_characteristics: ThrustCharacteristics {
@@ -112,32 +105,39 @@ pub fn spawn_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
                     max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
                     rot: Vec3::from_slice(&[0.5, 0.5, 0.5]),
                 },
+                physics: PhysicsBundle {
+                    transform: Transform::from_xyz(0.0, 5.0, 0.0),
+                    ..Default::default()
+                },
                 ..Default::default()
+            })
+            .with_children(|parent| {
+                parent.spawn_scene(model.clone());
             })
             .id()
     };
 
     commands
-        .spawn_bundle((
-            Transform::from_xyz(5.0, -0.0, -0.0).with_rotation(Quat::from_euler(
-                EulerRot::XYZ,
-                0.0,
-                1.0,
-                0.0,
-            )),
-            GlobalTransform::identity(),
-        ))
-        .with_children(|parent| {
-            parent.spawn_scene(scene.clone());
-        })
-        .insert_bundle(ShipBundle {
+        .spawn_bundle(ShipBundle {
             impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
             thrust_characteristics: ThrustCharacteristics {
                 min: Vec3::from_slice(&[-1.0, -1.0, -1.0]),
                 max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
-                rot: Vec3::from_slice(&[20.0, 20.0, 20.0]),
+                rot: Vec3::from_slice(&[5.0, 5.0, 5.0]),
+            },
+            physics: PhysicsBundle {
+                transform: Transform::from_xyz(5.0, -0.0, -0.0).with_rotation(Quat::from_euler(
+                    EulerRot::XYZ,
+                    0.0,
+                    1.0,
+                    0.0,
+                )),
+                ..Default::default()
             },
             ..Default::default()
+        })
+        .with_children(|parent| {
+            parent.spawn_scene(model.clone());
         })
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));
