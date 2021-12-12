@@ -1,5 +1,6 @@
 use bevy::{pbr::AmbientLight, prelude::*};
 use physics::PhysicsPlugin;
+use ship::ShipPlugin;
 use tracking::TrackingPlugin;
 
 mod physics;
@@ -17,6 +18,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
+        .add_plugin(ShipPlugin)
         .add_startup_system(setup)
         .add_startup_system(ship::spawn_ships)
         .run();

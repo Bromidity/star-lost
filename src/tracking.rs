@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::physics::{AngularAcceleration, AngularVelocity};
+use crate::{physics::AngularVelocity, ship::AngularImpulse};
 
 #[derive(Component)]
 pub struct TargetEntity(pub Entity);
@@ -35,12 +35,7 @@ pub fn targeting_entity_system(
 }
 
 pub fn targeting_system(
-    mut query: Query<(
-        &mut AngularAcceleration,
-        &AngularVelocity,
-        &Transform,
-        &Target,
-    )>,
+    mut query: Query<(&mut AngularImpulse, &AngularVelocity, &Transform, &Target)>,
 ) {
     for (mut angular_acceleration, angular_velocity, transform, target) in query.iter_mut() {
         // point_at is the target Orientation

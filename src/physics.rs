@@ -17,11 +17,11 @@ pub struct AngularAcceleration(pub Vec3);
 
 #[derive(Bundle, Default)]
 pub struct PhysicsBundle {
-    drag: Drag,
-    velocity: Velocity,
-    acceleration: Acceleration,
-    angular_velocity: AngularVelocity,
-    angular_acceleration: AngularAcceleration,
+    pub drag: Drag,
+    pub velocity: Velocity,
+    pub acceleration: Acceleration,
+    pub angular_velocity: AngularVelocity,
+    pub angular_acceleration: AngularAcceleration,
 }
 
 pub struct PhysicsPlugin;
