@@ -1,8 +1,10 @@
 use bevy::{pbr::AmbientLight, prelude::*};
+use controls::PlayerControlled;
 use physics::PhysicsPlugin;
 use ship::{ShipBundle, ShipPlugin, ThrustCharacteristics};
 use tracking::TrackingPlugin;
 
+mod controls;
 mod physics;
 mod ship;
 mod tracking;
@@ -19,6 +21,7 @@ fn main() {
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
         .add_plugin(ShipPlugin)
+        .add_system(controls::ship_movement_system)
         .add_startup_system(setup)
         .add_startup_system(ship::spawn_ships)
         .run();
@@ -30,12 +33,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(ShipBundle {
             thrust_characteristics: ThrustCharacteristics {
-                min: Vec3::from_slice(&[-1.0, -1.0, -1.0]),
-                max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
+                min: Vec3::from_slice(&[-1.0, -5.0, -1.0]),
+                max: Vec3::from_slice(&[1.0, 10.0, 1.0]),
                 rot: Vec3::from_slice(&[5.0, 5.0, 5.0]),
             },
             ..Default::default()
         })
+        .insert(PlayerControlled)
         .with_children(|parent| {
             parent.spawn_scene(model.clone());
             parent.spawn_bundle(PerspectiveCameraBundle {
