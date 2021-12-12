@@ -1,6 +1,6 @@
 use bevy::{pbr::AmbientLight, prelude::*};
-use controls::PlayerControlled;
-use physics::PhysicsPlugin;
+use controls::{ControlsPlugin, PlayerControlled};
+use physics::{Drag, PhysicsBundle, PhysicsPlugin};
 use ship::{ShipBundle, ShipPlugin, ThrustCharacteristics};
 use tracking::TrackingPlugin;
 
@@ -21,7 +21,7 @@ fn main() {
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
         .add_plugin(ShipPlugin)
-        .add_system(controls::ship_movement_system)
+        .add_plugin(ControlsPlugin)
         .add_startup_system(setup)
         .add_startup_system(ship::spawn_ships)
         .run();
@@ -32,6 +32,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(ShipBundle {
+            physics: PhysicsBundle {
+                drag: Drag(0.2),
+                ..Default::default()
+            },
             thrust_characteristics: ThrustCharacteristics {
                 min: Vec3::from_slice(&[-1.0, -5.0, -1.0]),
                 max: Vec3::from_slice(&[1.0, 10.0, 1.0]),

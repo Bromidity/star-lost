@@ -78,14 +78,14 @@ pub fn angular_impulse_system(
             let l = (thrust.rot / impulse.0).abs();
             let h = (-thrust.rot / impulse.0).abs();
 
-            let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z]
+            let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z, impulse.0.length()]
                 .iter()
                 .cloned()
                 .filter(|f| f.is_finite() && f > &0.0)
                 .reduce(f32::min)
                 .unwrap_or(0.0);
 
-            impulse.0.normalize() * smallest_factor
+            impulse.0 * smallest_factor
         } else {
             Vec3::ZERO
         }
@@ -99,7 +99,7 @@ pub fn spawn_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
         commands
             .spawn_bundle(ShipBundle {
                 impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.0])),
-                angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 5.0, 0.0])),
+                angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 0.0, 0.0])),
                 thrust_characteristics: ThrustCharacteristics {
                     min: Vec3::from_slice(&[-1.0, -2.0, -1.0]),
                     max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
