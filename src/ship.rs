@@ -98,8 +98,8 @@ pub fn spawn_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
     let id = {
         commands
             .spawn_bundle(ShipBundle {
-                impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.0])),
-                angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 0.0, 0.0])),
+                impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
+                angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 0.5, 0.0])),
                 thrust_characteristics: ThrustCharacteristics {
                     min: Vec3::from_slice(&[-1.0, -2.0, -1.0]),
                     max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
