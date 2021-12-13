@@ -1,0 +1,1 @@
+All the assets in here are derived from models generously licensed as Public Domain by Kenney (https://www.kenney.nl/).
