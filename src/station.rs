@@ -9,7 +9,7 @@ const OFFSETS: [[f32; 3]; 4] = [
     [0.0, 0.0, -1.0],
 ];
 
-trait StationPart {
+pub trait StationPart {
     fn build(
         &self,
         parent: &mut ChildBuilder,
@@ -50,8 +50,9 @@ where
 fn quick_build(parent: &mut ChildBuilder, model: Handle<Scene>, offset: Vec3, rotation: u8) {
     parent
         .spawn_bundle((
-            Transform::from_translation(offset)
-                .with_rotation(Quat::from_rotation_y(1.5708 * rotation as f32)),
+            Transform::from_translation(offset).with_rotation(Quat::from_rotation_y(
+                std::f32::consts::FRAC_PI_2 * rotation as f32,
+            )),
             GlobalTransform::identity(),
         ))
         .with_children(|segment| {
@@ -59,17 +60,18 @@ fn quick_build(parent: &mut ChildBuilder, model: Handle<Scene>, offset: Vec3, ro
         });
 }
 
-struct Cross<A = (), B = (), C = (), D = ()>
+#[derive(Copy, Clone)]
+pub struct Cross<A = (), B = (), C = (), D = ()>
 where
     A: StationPart,
     B: StationPart,
     C: StationPart,
     D: StationPart,
 {
-    left: A,
-    forward: B,
-    right: C,
-    back: D,
+    pub left: A,
+    pub forward: B,
+    pub right: C,
+    pub back: D,
 }
 
 impl<A, B, C, D> StationPart for Cross<A, B, C, D>
@@ -102,13 +104,14 @@ where
     }
 }
 
-struct Straight<A = (), B = ()>
+#[derive(Copy, Clone)]
+pub struct Straight<A = (), B = ()>
 where
     A: StationPart,
     B: StationPart,
 {
-    forward: A,
-    back: B,
+    pub forward: A,
+    pub back: B,
 }
 
 impl<A, B> StationPart for Straight<A, B>
@@ -137,13 +140,14 @@ where
     }
 }
 
-struct LeftCorner<A = (), B = ()>
+#[derive(Copy, Clone)]
+pub struct LeftCorner<A = (), B = ()>
 where
     A: StationPart,
     B: StationPart,
 {
-    left: A,
-    back: B,
+    pub left: A,
+    pub back: B,
 }
 
 impl<A, B> StationPart for LeftCorner<A, B>
@@ -172,40 +176,98 @@ where
     }
 }
 
-pub fn spawn_stations(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn_bundle((
-            Transform::from_xyz(0.0, 0.0, 0.0),
-            GlobalTransform::identity(),
-        ))
-        .with_children(|parent| {
-            Cross {
-                left: Straight {
-                    forward: LeftCorner {
-                        left: Straight {
-                            forward: LeftCorner {
-                                left: Straight {
-                                    forward: LeftCorner {
-                                        left: Straight {
-                                            forward: (),
-                                            back: (),
-                                        },
-                                        back: (),
-                                    },
-                                    back: (),
-                                },
-                                back: (),
-                            },
-                            back: (),
-                        },
-                        back: (),
-                    },
-                    back: (),
-                },
-                forward: (),
-                right: (),
-                back: (),
-            }
-            .build(parent, &asset_server, Vec3::ZERO, 0);
-        });
+#[derive(Copy, Clone)]
+pub struct LargeLeftCorner<A = (), B = ()>
+where
+    A: StationPart,
+    B: StationPart,
+{
+    pub left: A,
+    pub back: B,
+}
+
+impl<A, B> StationPart for LargeLeftCorner<A, B>
+where
+    A: StationPart,
+    B: StationPart,
+{
+    fn build(
+        &self,
+        parent: &mut ChildBuilder,
+        asset_server: &Res<AssetServer>,
+        offset: Vec3,
+        source: SourceDirection,
+    ) {
+        let offset = offset + Vec3::from_slice(&OFFSETS[(source as usize) % 4]) * 2.0;
+
+        quick_build(
+            parent,
+            asset_server.load("pipe_corner_round_large.glb#Scene0"),
+            offset,
+            source + 2,
+        );
+
+        self.left.build(
+            parent,
+            asset_server,
+            offset + Vec3::from_slice(&OFFSETS[(source as usize + 1) % 4]),
+            source + 1,
+        );
+        self.back.build(
+            parent,
+            asset_server,
+            offset - Vec3::from_slice(&OFFSETS[(source as usize) % 4]) * 2.0,
+            source,
+        );
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct Split<A, B, C>
+where
+    A: StationPart,
+    B: StationPart,
+    C: StationPart,
+{
+    pub rotation: u8,
+    pub left: A,
+    pub right: B,
+    pub back: C,
+}
+
+impl<A, B, C> StationPart for Split<A, B, C>
+where
+    A: StationPart,
+    B: StationPart,
+    C: StationPart,
+{
+    fn build(
+        &self,
+        parent: &mut ChildBuilder,
+        asset_server: &Res<AssetServer>,
+        offset: Vec3,
+        source: SourceDirection,
+    ) {
+        let offset = offset + Vec3::from_slice(&OFFSETS[source as usize % 4]);
+
+        quick_build(
+            parent,
+            asset_server.load("pipe_split.glb#Scene0"),
+            offset,
+            source + self.rotation + 3,
+        );
+
+        self.left
+            .build(parent, asset_server, offset, source + self.rotation + 1);
+        self.back
+            .build(parent, asset_server, offset, source + self.rotation);
+        self.right
+            .build(parent, asset_server, offset, source + self.rotation + 3);
+    }
+}
+
+#[derive(Bundle, Default)]
+pub struct StationBundle {
+    pub transform: Transform,
+    pub global_transform: GlobalTransform,
 }

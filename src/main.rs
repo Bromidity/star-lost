@@ -1,13 +1,14 @@
 use bevy::{pbr::AmbientLight, prelude::*};
-use controls::{ControlsPlugin, PlayerControlled};
-use physics::{Drag, PhysicsBundle, PhysicsPlugin};
-use ship::{ShipBundle, ShipPlugin, ThrustCharacteristics};
+use controls::ControlsPlugin;
+use physics::PhysicsPlugin;
+use ship::ShipPlugin;
 use tracking::TrackingPlugin;
 
 mod controls;
 mod physics;
 mod ship;
 mod station;
+mod tests;
 mod tracking;
 
 fn main() {
@@ -24,38 +25,14 @@ fn main() {
         .add_plugin(ShipPlugin)
         .add_plugin(ControlsPlugin)
         .add_startup_system(setup)
-        .add_startup_system(station::spawn_stations)
-        .add_startup_system(ship::spawn_ships)
         .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    ///let model = asset_server.load("ship.glb#Scene0");
-    /*
-    commands
-        .spawn_bundle(ShipBundle {
-            physics: PhysicsBundle {
-                drag: Drag(0.2),
-                ..Default::default()
-            },
-            thrust_characteristics: ThrustCharacteristics {
-                min: Vec3::from_slice(&[-1.0, -5.0, -1.0]),
-                max: Vec3::from_slice(&[1.0, 10.0, 1.0]),
-                rot: Vec3::from_slice(&[5.0, 5.0, 5.0]),
-            },
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            parent.spawn_scene(model.clone());
-            parent.spawn_bundle(PerspectiveCameraBundle {
-                transform: Transform::from_xyz(10.0, 5.0, 10.0)
-                    .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
-                ..Default::default()
-            });
-        });
-    */
+    tests::station::spawn_stations(&mut commands, asset_server);
+
     commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(10.0, 5.0, 10.0)
+        transform: Transform::from_xyz(0.0, 10.0, 1.0)
             .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
         ..Default::default()
     });
