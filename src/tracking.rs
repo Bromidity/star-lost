@@ -68,11 +68,11 @@ pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &T
         // otherwise, slow down.
         let dist_diff = point_at.rotation.angle_between(transform.rotation);
         let speed = if dist_diff < 1.0 {
-            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff])
+            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff]) + transform.rotation.mul_vec3(velocity.0)
         } else {
-            velocity.0 * 10.0
+            velocity.0 * 50.0
         };
-
+        //println!("{}", speed);
         impulse.0 = -speed;
     }
 }

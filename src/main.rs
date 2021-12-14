@@ -1,10 +1,11 @@
 use bevy::{pbr::AmbientLight, prelude::*};
 use controls::ControlsPlugin;
-use physics::PhysicsPlugin;
+use physics::{Acceleration, PhysicsPlugin};
 use ship::ShipPlugin;
 use tracking::TrackingPlugin;
 
 mod controls;
+mod debug;
 mod physics;
 mod ship;
 mod station;
@@ -24,12 +25,14 @@ fn main() {
         .add_plugin(TrackingPlugin)
         .add_plugin(ShipPlugin)
         .add_plugin(ControlsPlugin)
+        .add_system(debug::debug_arrow_system::<Acceleration>)
         .add_startup_system(setup)
         .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    tests::station::spawn_stations(&mut commands, asset_server);
+    tests::station::spawn_stations(&mut commands, &asset_server);
+    tests::tracking::spawn_tracking_ships(&mut commands, &asset_server);
 
     commands.spawn_bundle(PerspectiveCameraBundle {
         transform: Transform::from_xyz(40.0, 20.0, 40.0)

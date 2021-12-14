@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use bevy::prelude::*;
 
 #[derive(Default, Component)]
@@ -11,6 +13,13 @@ pub struct Drag(pub f32);
 
 #[derive(Default, Component)]
 pub struct Acceleration(pub Vec3);
+
+impl Deref for Acceleration {
+    type Target = Vec3;
+    fn deref(&self) -> &Vec3 {
+        &self.0
+    }
+}
 
 #[derive(Default, Component)]
 pub struct AngularAcceleration(pub Vec3);

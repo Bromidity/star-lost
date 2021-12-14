@@ -33,7 +33,7 @@ fn donut() -> impl StationPart {
 }
 
 #[allow(dead_code)]
-pub fn spawn_stations(commands: &mut Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_stations(commands: &mut Commands, asset_server: &Res<AssetServer>) {
     commands
         .spawn_bundle(StationBundle::default())
         .with_children(|parent| {

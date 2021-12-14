@@ -1,9 +1,14 @@
 use bevy::{math::EulerRot, prelude::*};
 
-use crate::{physics::PhysicsBundle, ship::*, tracking::*};
+use crate::{
+    debug::{AddDebugArrow, DebugArrow},
+    physics::{Acceleration, PhysicsBundle},
+    ship::*,
+    tracking::*,
+};
 
 #[allow(dead_code)]
-pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetServer>) {
     let model = asset_server.load("ship.glb#Scene0");
 
     let id = {
@@ -23,6 +28,7 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
             })
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
+                parent.spawn_bundle((DebugArrow::<Acceleration>::default(),));
             })
             .id()
     };
@@ -48,6 +54,7 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
         })
         .with_children(|parent| {
             parent.spawn_scene(model.clone());
+            parent.debug_vector::<Acceleration>(asset_server);
         })
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));

@@ -45,8 +45,15 @@ impl Plugin for ShipPlugin {
     }
 }
 
-pub fn impulse_system(mut query: Query<(&mut Acceleration, &Impulse, &ThrustCharacteristics)>) {
-    for (mut acceleration, impulse, thrust) in query.iter_mut() {
+pub fn impulse_system(
+    mut query: Query<(
+        &mut Acceleration,
+        &Transform,
+        &Impulse,
+        &ThrustCharacteristics,
+    )>,
+) {
+    for (mut acceleration, transform, impulse, thrust) in query.iter_mut() {
         acceleration.0 = if impulse.0.length_squared().is_normal() {
             let l = (thrust.max / impulse.0).abs();
             let h = (thrust.min / impulse.0).abs();
@@ -58,7 +65,8 @@ pub fn impulse_system(mut query: Query<(&mut Acceleration, &Impulse, &ThrustChar
                 .reduce(f32::min)
                 .unwrap_or(0.0);
 
-            impulse.0 * smallest_factor
+            // Finally rotate the impulse so it is relative to the ship position
+            transform.rotation.mul_vec3(impulse.0 * smallest_factor)
         } else {
             Vec3::ZERO
         }
