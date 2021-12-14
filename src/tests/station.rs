@@ -46,7 +46,9 @@ pub fn spawn_station(
     commands
         .spawn_bundle(StationBundle {
             transform: Transform::from_translation(position).with_rotation(rot),
-            angular_velocity: AngularVelocity(rot.mul_vec3(Vec3::from_slice(&[0.0, rotspeed, 0.0]))),
+            angular_velocity: AngularVelocity(
+                rot.mul_vec3(Vec3::from_slice(&[0.0, rotspeed, 0.0])),
+            ),
             ..Default::default()
         })
         .with_children(|parent| {

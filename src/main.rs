@@ -1,4 +1,8 @@
-use bevy::{pbr::AmbientLight, prelude::*, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}};
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    pbr::AmbientLight,
+    prelude::*,
+};
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
 use physics::PhysicsPlugin;
