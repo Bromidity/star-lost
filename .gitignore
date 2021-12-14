@@ -1,4 +1,1 @@
 /target
-/assets/**
-!/assets/*.glb
-!/assets/*.md

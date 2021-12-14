@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::physics::AngularVelocity;
+
 type SourceDirection = u8;
 
 const OFFSETS: [[f32; 3]; 4] = [
@@ -92,7 +94,7 @@ where
 
         quick_build(
             parent,
-            asset_server.load("pipe_cross.glb#Scene0"),
+            asset_server.load("models/pipe_cross.glb#Scene0"),
             offset,
             source,
         );
@@ -130,7 +132,7 @@ where
 
         quick_build(
             parent,
-            asset_server.load("pipe_straight.glb#Scene0"),
+            asset_server.load("models/pipe_straight.glb#Scene0"),
             offset,
             source + 1,
         );
@@ -166,7 +168,7 @@ where
 
         quick_build(
             parent,
-            asset_server.load("pipe_corner_round.glb#Scene0"),
+            asset_server.load("models/pipe_corner_round.glb#Scene0"),
             offset,
             source + 2,
         );
@@ -202,7 +204,7 @@ where
 
         quick_build(
             parent,
-            asset_server.load("pipe_corner_round_large.glb#Scene0"),
+            asset_server.load("models/pipe_corner_round_large.glb#Scene0"),
             offset,
             source + 2,
         );
@@ -252,7 +254,7 @@ where
 
         quick_build(
             parent,
-            asset_server.load("pipe_split.glb#Scene0"),
+            asset_server.load("models/pipe_split.glb#Scene0"),
             offset,
             source + self.rotation + 3,
         );
@@ -270,4 +272,5 @@ where
 pub struct StationBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
+    pub angular_velocity: AngularVelocity,
 }

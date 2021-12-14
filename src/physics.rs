@@ -2,16 +2,18 @@ use std::ops::Deref;
 
 use bevy::prelude::*;
 
-#[derive(Default, Component)]
+use crate::debug::{debug_arrow_system, DebuggableValue};
+
+#[derive(Debug, Default, Component)]
 pub struct Velocity(pub Vec3);
 
-#[derive(Default, Component)]
+#[derive(Debug, Default, Component)]
 pub struct AngularVelocity(pub Vec3);
 
-#[derive(Default, Component)]
+#[derive(Debug, Default, Component)]
 pub struct Drag(pub f32);
 
-#[derive(Default, Component)]
+#[derive(Debug, Default, Component)]
 pub struct Acceleration(pub Vec3);
 
 impl Deref for Acceleration {
@@ -21,7 +23,7 @@ impl Deref for Acceleration {
     }
 }
 
-#[derive(Default, Component)]
+#[derive(Debug, Default, Component)]
 pub struct AngularAcceleration(pub Vec3);
 
 #[derive(Bundle, Default)]
@@ -43,7 +45,13 @@ impl Plugin for PhysicsPlugin {
             .add_system(acceleration_system)
             .add_system(velocity_system)
             .add_system(angular_velocity_system)
-            .add_system(angular_acceleration_system);
+            .add_system(angular_acceleration_system)
+            .add_plugin(DebuggableValue::<Acceleration>::default())
+            .add_plugin(DebuggableValue::<Velocity>::default())
+            .add_plugin(DebuggableValue::<Transform>::default())
+            .add_plugin(DebuggableValue::<AngularAcceleration>::default())
+            .add_plugin(DebuggableValue::<AngularVelocity>::default())
+            .add_system(debug_arrow_system::<Acceleration>);
     }
 }
 

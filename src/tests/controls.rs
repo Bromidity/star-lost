@@ -4,7 +4,7 @@ use crate::{physics::*, ship::*};
 
 #[allow(dead_code)]
 pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let model = asset_server.load("ship.glb#Scene0");
+    let model = asset_server.load("models/ship.glb#Scene0");
     commands
         .spawn_bundle(ShipBundle {
             physics: PhysicsBundle {

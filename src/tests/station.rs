@@ -1,4 +1,4 @@
-use crate::station::*;
+use crate::{physics::AngularVelocity, station::*};
 use bevy::prelude::*;
 
 fn donut() -> impl StationPart {
@@ -35,7 +35,10 @@ fn donut() -> impl StationPart {
 #[allow(dead_code)]
 pub fn spawn_stations(commands: &mut Commands, asset_server: &Res<AssetServer>) {
     commands
-        .spawn_bundle(StationBundle::default())
+        .spawn_bundle(StationBundle {
+            angular_velocity: AngularVelocity(Vec3::from_slice(&[0.0, 0.3, 0.0])),
+            ..Default::default()
+        })
         .with_children(|parent| {
             donut().build(parent, &asset_server, Vec3::ZERO, 0);
         });

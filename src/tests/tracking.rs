@@ -1,15 +1,15 @@
 use bevy::{math::EulerRot, prelude::*};
 
 use crate::{
-    debug::{AddDebugArrow, DebugArrow},
-    physics::{Acceleration, PhysicsBundle},
+    debug::{AddDebugArrow, AddDebugValue, DebugArrow},
+    physics::{Acceleration, PhysicsBundle, AngularVelocity},
     ship::*,
     tracking::*,
 };
 
 #[allow(dead_code)]
 pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetServer>) {
-    let model = asset_server.load("ship.glb#Scene0");
+    let model = asset_server.load("models/ship.glb#Scene0");
 
     let id = {
         commands
@@ -56,6 +56,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
             parent.spawn_scene(model.clone());
         })
         .debug_vector::<Acceleration>(asset_server)
+        .debug_value::<Acceleration>("acceleration")
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));
 }
