@@ -54,8 +54,8 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
         })
         .with_children(|parent| {
             parent.spawn_scene(model.clone());
-            parent.debug_vector::<Acceleration>(asset_server);
         })
+        .debug_vector::<Acceleration>(asset_server)
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));
 }

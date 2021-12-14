@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, ops::Deref};
 
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
 pub struct DebugArrow<T: Component> {
@@ -19,23 +19,25 @@ pub trait AddDebugArrow {
     fn debug_vector<T: Component + Deref<Target = Vec3>>(
         &mut self,
         _asset_server: &Res<AssetServer>,
-    ) {
-    }
+    ) -> &mut Self;
 }
 
-impl AddDebugArrow for ChildBuilder<'_, '_, '_> {
+impl AddDebugArrow for EntityCommands<'_, '_, '_> {
     fn debug_vector<T: Component + Deref<Target = Vec3>>(
         &mut self,
         asset_server: &Res<AssetServer>,
-    ) {
-        self.spawn_bundle((
-            Transform::default(),
-            GlobalTransform::default(),
-            DebugArrow::<T>::default(),
-        ))
-        .with_children(|arrow| {
-            arrow.spawn_scene(asset_server.load("arrow.glb#Scene0"));
-        });
+    ) -> &mut Self {
+        self.with_children(|parent| {
+            parent
+                .spawn_bundle((
+                    Transform::default(),
+                    GlobalTransform::default(),
+                    DebugArrow::<T>::default(),
+                ))
+                .with_children(|arrow| {
+                    arrow.spawn_scene(asset_server.load("arrow.glb#Scene0"));
+                });
+        })
     }
 }
 
