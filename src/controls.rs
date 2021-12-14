@@ -18,7 +18,7 @@ impl Plugin for ControlsPlugin {
 
 fn initial_grab_cursor(mut windows: ResMut<Windows>) {
     let window = windows.get_primary_mut().unwrap();
-    window.set_cursor_lock_mode(true);
+    //window.set_cursor_lock_mode(true);
     //window.set_cursor_visibility(false);
     window.set_cursor_position(Vec2::from_slice(&[
         window.width() / 2.0,
