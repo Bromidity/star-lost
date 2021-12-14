@@ -33,10 +33,20 @@ fn donut() -> impl StationPart {
 }
 
 #[allow(dead_code)]
-pub fn spawn_stations(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+pub fn spawn_station(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    position: Vec3,
+    rotspeed: f32,
+) {
+    // Just rotate the station a bit, so its rotation axis is
+    // slightly wonky just because it looks cool
+    let rot = Quat::from_rotation_x(-rotspeed * 1.5);
+
     commands
         .spawn_bundle(StationBundle {
-            angular_velocity: AngularVelocity(Vec3::from_slice(&[0.0, 0.3, 0.0])),
+            transform: Transform::from_translation(position).with_rotation(rot),
+            angular_velocity: AngularVelocity(rot.mul_vec3(Vec3::from_slice(&[0.0, rotspeed, 0.0]))),
             ..Default::default()
         })
         .with_children(|parent| {

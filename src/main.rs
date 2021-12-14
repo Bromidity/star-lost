@@ -1,4 +1,4 @@
-use bevy::{pbr::AmbientLight, prelude::*};
+use bevy::{pbr::AmbientLight, prelude::*, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}};
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
 use physics::PhysicsPlugin;
@@ -22,6 +22,8 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(Msaa { samples: 4 })
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(DebugPlugin)
         .add_plugin(PhysicsPlugin)
@@ -37,12 +39,23 @@ fn main() {
 pub struct WorldCamera;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    tests::station::spawn_stations(&mut commands, &asset_server);
+    tests::station::spawn_station(
+        &mut commands,
+        &asset_server,
+        Vec3::from_slice(&[10.0, 10.0, 10.0]),
+        -0.1,
+    );
+    tests::station::spawn_station(
+        &mut commands,
+        &asset_server,
+        -Vec3::from_slice(&[10.0, 10.0, 10.0]),
+        0.3,
+    );
     tests::tracking::spawn_tracking_ships(&mut commands, &asset_server);
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(40.0, 20.0, 40.0)
+            transform: Transform::from_xyz(-40.0, 20.0, 40.0)
                 .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
             ..Default::default()
         })
