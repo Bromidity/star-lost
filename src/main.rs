@@ -15,7 +15,7 @@ mod tracking;
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            color: Color::YELLOW,
+            color: Color::WHITE,
             brightness: 1.0 / 2.0f32,
         })
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
