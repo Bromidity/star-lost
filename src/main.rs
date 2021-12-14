@@ -1,5 +1,6 @@
 use bevy::{pbr::AmbientLight, prelude::*};
 use controls::ControlsPlugin;
+use debug::DebugPlugin;
 use physics::PhysicsPlugin;
 use ship::ShipPlugin;
 use tracking::TrackingPlugin;
@@ -22,12 +23,12 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
+        .add_plugin(DebugPlugin)
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
         .add_plugin(ShipPlugin)
         .add_plugin(ControlsPlugin)
         .add_system(ui::follow_object_system)
-        .add_system(debug::refresh_rendered_debug_window)
         .add_startup_system(setup)
         .run();
 }

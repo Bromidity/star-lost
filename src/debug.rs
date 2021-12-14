@@ -3,6 +3,31 @@ use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
 use crate::ui::FollowObject;
 
+pub struct DebugPlugin;
+
+impl Plugin for DebugPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<DebugValueAddedEvent>()
+            .add_stage_after(
+                CoreStage::PostUpdate,
+                "debug",
+                SystemStage::single_threaded(),
+            )
+            .add_system_to_stage(
+                "debug",
+                handle_debug_value_event.label("debug_value_event_handler"),
+            )
+            .add_system_to_stage(
+                "debug",
+                refresh_rendered_debug_window.label("update_debug_window"),
+            )
+            .add_system_to_stage(
+                "debug",
+                remove_unused_debug_windows.after("update_debug_window"),
+            );
+    }
+}
+
 #[derive(Component)]
 pub struct DebugArrow<T: Component> {
     _data: PhantomData<T>,
@@ -59,8 +84,14 @@ pub struct DebuggableValue<T: Component + std::fmt::Debug>(PhantomData<T>);
 
 impl<T: Component + std::fmt::Debug> Plugin for DebuggableValue<T> {
     fn build(&self, app: &mut App) {
-        app.add_system(add_debug_window_if_necessary_system::<T>)
-            .add_system(update_debug_window_with_value_system::<T>);
+        app.add_system_to_stage(
+            "debug",
+            emit_debug_value_added_event_system::<T>.before("debug_value_event_handler"),
+        )
+        .add_system_to_stage(
+            "debug",
+            update_debug_window_with_value_system::<T>.before("update_debug_window"),
+        );
     }
 }
 
@@ -116,44 +147,83 @@ pub fn update_debug_window_with_value_system<T: Component + std::fmt::Debug>(
     }
 }
 
-pub fn add_debug_window_if_necessary_system<T: Component>(
+struct DebugValueAddedEvent(Entity);
+
+#[derive(Component)]
+pub struct HasDebugWindow(pub Entity);
+
+fn handle_debug_value_event(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    query: Query<Entity, (Without<DebugWindow>, Added<DebugValue<T>>)>,
+    mut events: EventReader<DebugValueAddedEvent>,
+    query: Query<Entity, With<HasDebugWindow>>,
 ) {
     let font = asset_server.load("fonts/DejaVuSansMono.ttf");
-    for entity in query.iter() {
-        commands
-            .spawn_bundle(TextBundle {
-                style: Style {
-                    align_self: AlignSelf::FlexEnd,
-                    position_type: PositionType::Absolute,
-                    position: Rect {
-                        bottom: Val::Px(5.0),
-                        left: Val::Px(15.0),
+    let mut just_added = Vec::new();
+    for DebugValueAddedEvent(entity) in events.iter() {
+        if !just_added.contains(entity) && query.get(*entity).is_err() {
+            info!("creating DebugWindow for {:?}", entity);
+
+            let debug_window = commands
+                .spawn_bundle(TextBundle {
+                    style: Style {
+                        align_self: AlignSelf::FlexEnd,
+                        position_type: PositionType::Absolute,
+                        position: Rect {
+                            bottom: Val::Px(5.0),
+                            left: Val::Px(15.0),
+                            ..Default::default()
+                        },
+                        size: Size {
+                            width: Val::Px(400.0),
+                            ..Default::default()
+                        },
                         ..Default::default()
                     },
-                    size: Size {
-                        width: Val::Px(400.0),
-                        ..Default::default()
-                    },
+                    text: Text::with_section(
+                        "EMTPY DEBUG WINDOW".to_string(),
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 12.0,
+                            color: Color::WHITE,
+                        },
+                        TextAlignment {
+                            ..Default::default()
+                        },
+                    ),
                     ..Default::default()
-                },
-                text: Text::with_section(
-                    "EMTPY DEBUG WINDOW".to_string(),
-                    TextStyle {
-                        font: font.clone(),
-                        font_size: 12.0,
-                        color: Color::WHITE,
-                    },
-                    TextAlignment {
-                        ..Default::default()
-                    },
-                ),
-                ..Default::default()
-            })
-            .insert(DebugWindow::showing_values_for(entity))
-            .insert(FollowObject(entity));
+                })
+                .insert(DebugWindow::showing_values_for(*entity))
+                .insert(FollowObject(*entity))
+                .id();
+
+            commands
+                .entity(*entity)
+                .insert(HasDebugWindow(debug_window));
+            just_added.push(*entity);
+        }
+    }
+}
+
+fn emit_debug_value_added_event_system<T: Component>(
+    query: Query<Entity, (Without<HasDebugWindow>, Added<DebugValue<T>>)>,
+    mut events: EventWriter<DebugValueAddedEvent>,
+) {
+    for entity in query.iter() {
+        events.send(DebugValueAddedEvent(entity));
+    }
+}
+
+fn remove_unused_debug_windows(
+    mut commands: Commands,
+    window_query: Query<(Entity, &DebugWindow)>,
+) {
+    for (entity, window) in window_query.iter() {
+        if window.values.is_empty() {
+            info!("removing unused DebugWindow for {:?}", window.parent);
+            commands.entity(window.parent).remove::<HasDebugWindow>();
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
 

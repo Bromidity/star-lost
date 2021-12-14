@@ -2,7 +2,7 @@ use bevy::{math::EulerRot, prelude::*};
 
 use crate::{
     debug::{AddDebugArrow, AddDebugValue, DebugArrow},
-    physics::{Acceleration, PhysicsBundle, AngularVelocity},
+    physics::*,
     ship::*,
     tracking::*,
 };
@@ -12,6 +12,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
     let model = asset_server.load("models/ship.glb#Scene0");
 
     let id = {
+        // Leader
         commands
             .spawn_bundle(ShipBundle {
                 impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
@@ -33,6 +34,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
             .id()
     };
 
+    // Follower
     commands
         .spawn_bundle(ShipBundle {
             impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
@@ -57,6 +59,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
         })
         .debug_vector::<Acceleration>(asset_server)
         .debug_value::<Acceleration>("acceleration")
+        .debug_value::<AngularVelocity>("angular_velocity")
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));
 }
