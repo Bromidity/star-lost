@@ -119,7 +119,7 @@ pub struct DebugValue<T: Component> {
 impl<T: Component> DebugValue<T> {
     pub fn with_label(label: &'static str) -> Self {
         DebugValue {
-            label: label,
+            label,
             _data: PhantomData::default(),
         }
     }
@@ -140,7 +140,7 @@ pub fn update_debug_window_with_value_system<T: Component + std::fmt::Debug>(
     values_query: Query<(&DebugValue<T>, &T)>,
 ) {
     for mut window in window_query.iter_mut() {
-        for (label, value) in values_query.get(window.parent) {
+        if let Ok((label, value)) = values_query.get(window.parent) {
             let value = format!("{:#?}", value);
             window.values.insert(label.label, value);
         }

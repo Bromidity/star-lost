@@ -40,6 +40,6 @@ pub fn spawn_stations(commands: &mut Commands, asset_server: &Res<AssetServer>) 
             ..Default::default()
         })
         .with_children(|parent| {
-            donut().build(parent, &asset_server, Vec3::ZERO, 0);
+            donut().build(parent, asset_server, Vec3::ZERO, 0);
         });
 }
