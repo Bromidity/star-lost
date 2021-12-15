@@ -5,9 +5,17 @@ use crate::{
     ship::{AngularImpulse, Impulse},
 };
 
+/// Set the target entity as the entity's target.
+/// [targeting_entity_system] will continuously update the entity's [Target] position
+/// with the coordinates of the target entity.
 #[derive(Component)]
 pub struct TargetEntity(pub Entity);
 
+/// Marks a 3D point in space as the [Target] of the entity to which it is applied.
+/// The [angular_targeting_system] will attempt to align any entity with a [Target]
+/// component so it points at the designated point in space, while [approach_system]
+/// will attempt to accelerate towards the point in space, if the entity is directed
+/// at the point.
 #[derive(Component)]
 pub struct Target(pub Vec3);
 
@@ -27,6 +35,7 @@ impl Plugin for TrackingPlugin {
     }
 }
 
+/// Maps an entity target into a position target by translating a [TargetEntity]'s [Transform].translation.
 pub fn targeting_entity_system(
     mut query: Query<(&mut Target, &TargetEntity)>,
     positions: Query<&Transform>,
@@ -38,6 +47,8 @@ pub fn targeting_entity_system(
     }
 }
 
+/// Attempts to point entities with [Target] components towards their target positions by
+/// applying an [AngularImpulse]
 pub fn angular_targeting_system(
     mut query: Query<(&mut AngularImpulse, &AngularVelocity, &Transform, &Target)>,
 ) {
@@ -59,6 +70,8 @@ pub fn angular_targeting_system(
     }
 }
 
+/// Attempts to accelerate any entity with a [Target] component forwards, assuming that
+/// the entity is approximately pointing at the target position.
 pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
         let mut point_at = Transform::from_translation(transform.translation);

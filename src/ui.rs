@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::Camera};
 
-/// Marks an entity as *the* 3D World camera. This is used by the 
+/// Marks an entity as *the* 3D World camera. This is used by the
 /// [follow_object_system](ui::follow_object_system) to translate
 /// an entity's 3D world position into screen space.
 #[derive(Component)]
