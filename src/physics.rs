@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use bevy::prelude::*;
 
-use crate::debug::{debug_arrow_system, DebuggableValue};
+use crate::debug::{debug_vector_system, DebuggableValue};
 
 /// Translational velocity of the entity. Integrated by [velocity_system] into the entity [Transform]'s translational component.
 #[derive(Debug, Default, Component)]
@@ -62,7 +62,7 @@ impl Plugin for PhysicsPlugin {
             .add_plugin(DebuggableValue::<Transform>::default())
             .add_plugin(DebuggableValue::<AngularAcceleration>::default())
             .add_plugin(DebuggableValue::<AngularVelocity>::default())
-            .add_system(debug_arrow_system::<Acceleration>);
+            .add_system(debug_vector_system::<Acceleration>);
     }
 }
 

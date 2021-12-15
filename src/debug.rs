@@ -28,6 +28,9 @@ impl Plugin for DebugPlugin {
     }
 }
 
+/// Indicates that an a Debug vector should be drawn based on this entity's T-component
+/// Can for instance be attached to an instance as a `DebugVector<Acceleration>` to
+/// have an arrow drawn in 3D space to indicate a the value of a ship's [Acceleration](crate::physics::Acceleration) component.
 #[derive(Component)]
 pub struct DebugVector<T: Component> {
     _data: PhantomData<T>,
@@ -41,6 +44,7 @@ impl<T: Component> Default for DebugVector<T> {
     }
 }
 
+/// Utility trait for attaching a [DebugVector] to an entity
 pub trait AddDebugArrow {
     fn debug_vector<T: Component + Deref<Target = Vec3>>(
         &mut self,
@@ -67,7 +71,8 @@ impl AddDebugArrow for EntityCommands<'_, '_, '_> {
     }
 }
 
-pub fn debug_arrow_system<T: Component + Deref<Target = Vec3>>(
+/// Responsible for updating the [Transform] of [DebugVector]s to reflect their reflected values
+pub fn debug_vector_system<T: Component + Deref<Target = Vec3>>(
     mut query: Query<(&mut Transform, &Parent), With<DebugVector<T>>>,
     value: Query<&T>,
 ) {
@@ -80,7 +85,7 @@ pub fn debug_arrow_system<T: Component + Deref<Target = Vec3>>(
 }
 
 /// Plugin for initializing the systems required to populate [DebugWindow]s with information
-/// from a specific T-component. This must be called on every [Component] which might need to
+/// from a specific T-component. This must be called for every [Component] which might need to
 /// be debugged in the future, otherwise the systems responsible for recording the value into
 /// the [DebugWindow] won't be instantiated ([update_debug_window_with_value_system], [emit_debug_value_added_event_system]),
 /// and therefore won't ever be displayed. See [PhysicsPlugin](crate::physics::PhysicsPlugin) for an example of how to make components debuggable.
@@ -251,11 +256,11 @@ fn remove_unused_debug_windows(
     }
 }
 
+/// Utility extension for [EntityCommands] for easily adding a [DebugValue] to an entity.
 pub trait AddDebugValue {
     fn debug_value<T: Component + std::fmt::Debug>(&mut self, label: &'static str) -> &mut Self;
 }
 
-/// Utility extension for [EntityCommands] for easily adding a [DebugValue] to an entity.
 impl AddDebugValue for EntityCommands<'_, '_, '_> {
     fn debug_value<T: Component + std::fmt::Debug>(&mut self, label: &'static str) -> &mut Self {
         self.insert(DebugValue::<T>::with_label(label))

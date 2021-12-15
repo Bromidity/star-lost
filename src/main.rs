@@ -39,9 +39,6 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
-pub struct WorldCamera;
-
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     tests::station::spawn_station(
         &mut commands,
@@ -63,7 +60,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
             ..Default::default()
         })
-        .insert(WorldCamera);
+        .insert(ui::WorldCamera);
     commands.spawn_bundle(UiCameraBundle::default());
 
     commands.spawn_bundle(PointLightBundle {
