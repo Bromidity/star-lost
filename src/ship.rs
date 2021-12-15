@@ -74,8 +74,8 @@ pub fn impulse_system(
 ) {
     for (mut acceleration, transform, impulse, thrust) in query.iter_mut() {
         acceleration.0 = if impulse.0.length_squared().is_normal() {
-            let l = (thrust.max / impulse.0).abs();
-            let h = (thrust.min / impulse.0).abs();
+            let l = (impulse.0 / thrust.max).abs();
+            let h = (impulse.0 / thrust.min).abs();
 
             let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z, impulse.0.length()]
                 .iter()
@@ -104,16 +104,16 @@ pub fn angular_impulse_system(
     for (mut acceleration, impulse, thrust) in query.iter_mut() {
         acceleration.0 = if impulse.0.length_squared().is_normal() {
             let l = (thrust.rot / impulse.0).abs();
-            let h = (-thrust.rot / impulse.0).abs();
+            let h = ((-thrust.rot) / impulse.0).abs();
 
             let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z, impulse.0.length()]
                 .iter()
                 .cloned()
-                .filter(|f| f.is_finite() && f > &0.0)
+                .filter(|f| f.is_normal())
                 .reduce(f32::min)
                 .unwrap_or(0.0);
 
-            impulse.0 * smallest_factor
+            impulse.0.normalize() * smallest_factor
         } else {
             Vec3::ZERO
         }
