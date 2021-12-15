@@ -27,6 +27,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
                     ..Default::default()
                 },
             })
+            .debug_vector::<Acceleration>(asset_server)
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
                 parent.spawn_bundle((DebugVector::<Acceleration>::default(),));
@@ -59,7 +60,6 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
         })
         .debug_vector::<Acceleration>(asset_server)
         .debug_value::<Acceleration>("acceleration")
-        .debug_value::<AngularVelocity>("angular_velocity")
         .insert(TargetEntity(id))
         .insert(Target(Vec3::from_slice(&[0.0, 0.0, 0.0])));
 }

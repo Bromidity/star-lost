@@ -64,7 +64,7 @@ pub fn angular_targeting_system(
             (point_at.rotation * transform.rotation.inverse()).normalize()
         };
 
-        // Get the difference between target Orientation and current Orientation, expressed
+        // Get the difference between target Orientation and current Orientation
         let (diff, _) = diff.to_axis_angle();
         angular_impulse.0 = (diff - angular_velocity.0 * 3.0).normalize()
     }
@@ -81,11 +81,10 @@ pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &T
         // otherwise, slow down.
         let dist_diff = point_at.rotation.angle_between(transform.rotation);
         let speed = if dist_diff < 1.0 {
-            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff]) + transform.rotation.mul_vec3(velocity.0)
+            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff])
         } else {
-            velocity.0 * 50.0
+            transform.rotation.inverse() * velocity.0
         };
-        //println!("{}", speed);
         impulse.0 = -speed;
     }
 }

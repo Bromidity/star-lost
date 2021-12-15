@@ -8,6 +8,13 @@ use crate::debug::{debug_vector_system, DebuggableValue};
 #[derive(Debug, Default, Component)]
 pub struct Velocity(pub Vec3);
 
+impl Deref for Velocity {
+    type Target = Vec3;
+    fn deref(&self) -> &Vec3 {
+        &self.0
+    }
+}
+
 /// Angular velocity of the entity. Integrated by [angular_velocity_system] into the entity [Transform]'s rotational component.
 #[derive(Debug, Default, Component)]
 pub struct AngularVelocity(pub Vec3);
@@ -57,11 +64,12 @@ impl Plugin for PhysicsPlugin {
             .add_system(velocity_system)
             .add_system(angular_velocity_system)
             .add_system(angular_acceleration_system)
-            .add_plugin(DebuggableValue::<Acceleration>::default())
-            .add_plugin(DebuggableValue::<Velocity>::default())
             .add_plugin(DebuggableValue::<Transform>::default())
+            .add_plugin(DebuggableValue::<Velocity>::default())
+            .add_plugin(DebuggableValue::<Acceleration>::default())
             .add_plugin(DebuggableValue::<AngularAcceleration>::default())
             .add_plugin(DebuggableValue::<AngularVelocity>::default())
+            .add_system(debug_vector_system::<Velocity>)
             .add_system(debug_vector_system::<Acceleration>);
     }
 }
@@ -69,8 +77,8 @@ impl Plugin for PhysicsPlugin {
 /// Integrates the [Velocity] into the entity [Transform]'s translational component
 pub fn velocity_system(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
     for (mut transform, velocity) in query.iter_mut() {
-        let translated_velocity = transform.rotation * velocity.0;
-        transform.translation += translated_velocity * time.delta_seconds();
+        //let translated_velocity = transform.rotation * velocity.0;
+        transform.translation += velocity.0 * time.delta_seconds();
     }
 }
 

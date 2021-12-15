@@ -74,12 +74,13 @@ impl AddDebugArrow for EntityCommands<'_, '_, '_> {
 /// Responsible for updating the [Transform] of [DebugVector]s to reflect their reflected values
 pub fn debug_vector_system<T: Component + Deref<Target = Vec3>>(
     mut query: Query<(&mut Transform, &Parent), With<DebugVector<T>>>,
-    value: Query<&T>,
+    value: Query<(&GlobalTransform, &T), Without<DebugVector<T>>>,
 ) {
     for (mut transform, parent) in query.iter_mut() {
-        if let Ok(debugged_value) = value.get_component::<T>(parent.0) {
-            transform.rotation = Quat::from_rotation_arc(Vec3::X, debugged_value.normalize());
-            transform.scale = Vec3::from_slice(&[1.0, debugged_value.length() * 2.0, 1.0]);
+        if let Ok((global, debugged_value)) = value.get(parent.0) {
+            transform.look_at(**debugged_value, Vec3::Y);
+            transform.rotation *= global.rotation.inverse();
+            transform.scale = Vec3::from_slice(&[1.0, debugged_value.length() * 4.0, 1.0]);
         }
     }
 }
