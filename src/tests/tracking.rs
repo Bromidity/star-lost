@@ -1,7 +1,7 @@
 use bevy::{math::EulerRot, prelude::*};
 
 use crate::{
-    debug::{AddDebugArrow, AddDebugValue, DebugArrow},
+    debug::{AddDebugArrow, AddDebugValue, DebugVector},
     physics::*,
     ship::*,
     tracking::*,
@@ -29,7 +29,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
             })
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
-                parent.spawn_bundle((DebugArrow::<Acceleration>::default(),));
+                parent.spawn_bundle((DebugVector::<Acceleration>::default(),));
             })
             .id()
     };

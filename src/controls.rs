@@ -26,6 +26,8 @@ fn initial_grab_cursor(mut windows: ResMut<Windows>) {
     ]));
 }
 
+/// Set entities with [PlayerControlled] component's [Impulse] component values based on user input.
+/// Default: `W`, `A`, `S`, `D` for strafe impulses, `LShift` and `LControl` for forwards/backwards acceleration respectively.
 pub fn ship_translational_movement_system(
     windows: Res<Windows>,
     keys: Res<Input<KeyCode>>,
@@ -51,7 +53,8 @@ pub fn ship_translational_movement_system(
         }
     }
 }
-
+/// Set entities with [PlayerControlled] component's [AngularImpulse] component values based on user input.
+/// This system is super broken and does not work very well. Nausea *may* occur
 pub fn ship_rotational_movement_system(
     windows: Res<Windows>,
     mut query: Query<&mut AngularImpulse, With<PlayerControlled>>,

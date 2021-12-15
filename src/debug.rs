@@ -29,11 +29,11 @@ impl Plugin for DebugPlugin {
 }
 
 #[derive(Component)]
-pub struct DebugArrow<T: Component> {
+pub struct DebugVector<T: Component> {
     _data: PhantomData<T>,
 }
 
-impl<T: Component> Default for DebugArrow<T> {
+impl<T: Component> Default for DebugVector<T> {
     fn default() -> Self {
         Self {
             _data: PhantomData::default(),
@@ -58,7 +58,7 @@ impl AddDebugArrow for EntityCommands<'_, '_, '_> {
                 .spawn_bundle((
                     Transform::default(),
                     GlobalTransform::default(),
-                    DebugArrow::<T>::default(),
+                    DebugVector::<T>::default(),
                 ))
                 .with_children(|arrow| {
                     arrow.spawn_scene(asset_server.load("models/arrow.glb#Scene0"));
@@ -68,7 +68,7 @@ impl AddDebugArrow for EntityCommands<'_, '_, '_> {
 }
 
 pub fn debug_arrow_system<T: Component + Deref<Target = Vec3>>(
-    mut query: Query<(&mut Transform, &Parent), With<DebugArrow<T>>>,
+    mut query: Query<(&mut Transform, &Parent), With<DebugVector<T>>>,
     value: Query<&T>,
 ) {
     for (mut transform, parent) in query.iter_mut() {
@@ -79,6 +79,11 @@ pub fn debug_arrow_system<T: Component + Deref<Target = Vec3>>(
     }
 }
 
+/// Plugin for initializing the systems required to populate [DebugWindow]s with information
+/// from a specific T-component. This must be called on every [Component] which might need to
+/// be debugged in the future, otherwise the systems responsible for recording the value into
+/// the [DebugWindow] won't be instantiated ([update_debug_window_with_value_system], [emit_debug_value_added_event_system]),
+/// and therefore won't ever be displayed. See [PhysicsPlugin](crate::physics::PhysicsPlugin) for an example of how to make components debuggable.
 #[derive(Default)]
 pub struct DebuggableValue<T: Component + std::fmt::Debug>(PhantomData<T>);
 
@@ -95,8 +100,14 @@ impl<T: Component + std::fmt::Debug> Plugin for DebuggableValue<T> {
     }
 }
 
+/// Component for storing information meant to be rendered on top of an [Entity] in 3D space
 #[derive(Debug, Component)]
 pub struct DebugWindow {
+    /// The reason I'm doing this instead of [Parent]ing directly to the targeted entity
+    /// is because the [DebugWindow] and UI-component belong to the same entity and
+    /// mixing 3D elements (the parent entity) and 2D elements (the UI component)
+    /// within the same hierarchy is a generally a bad idea dn concretely very confusing
+    /// for Bevy, causing it to emit a WARNing
     pub parent: Entity,
     pub values: HashMap<&'static str, String>,
 }
@@ -110,6 +121,9 @@ impl DebugWindow {
     }
 }
 
+/// When attached to a 3D entity, ensures the value of the entity's T-component
+/// is captured in a [DebugWindow] attached to the entity's world-to-screen-space
+/// coordinate.
 #[derive(Component)]
 pub struct DebugValue<T: Component> {
     label: &'static str,
@@ -125,6 +139,8 @@ impl<T: Component> DebugValue<T> {
     }
 }
 
+/// Updates the UI-element displaying the [DebugWindow] information with information
+/// from the [DebugWindow] component.
 pub fn refresh_rendered_debug_window(mut query: Query<(&mut Text, &DebugWindow)>) {
     for (mut text, window) in query.iter_mut() {
         let mut block = String::new();
@@ -135,6 +151,7 @@ pub fn refresh_rendered_debug_window(mut query: Query<(&mut Text, &DebugWindow)>
     }
 }
 
+/// Reads the T-component from the entity and writes its value into the entity's [DebugWindow]
 pub fn update_debug_window_with_value_system<T: Component + std::fmt::Debug>(
     mut window_query: Query<&mut DebugWindow>,
     values_query: Query<(&DebugValue<T>, &T)>,
@@ -147,11 +164,15 @@ pub fn update_debug_window_with_value_system<T: Component + std::fmt::Debug>(
     }
 }
 
+/// Emitted whenever a [DebugValue] is added to an entity.
+/// Captured by the [handle_debug_value_event] system in order to make sure a [DebugWindow] is attached to the entity in question.
 struct DebugValueAddedEvent(Entity);
 
+/// Utility structure added to a 3D entity to link it to its 2D UI-element/[DebugWindow] entity
 #[derive(Component)]
 pub struct HasDebugWindow(pub Entity);
 
+/// Checks if a [DebugWindow] already exists for the 3D entity which just had a [DebugValue] added, otherwise creates one for it.
 fn handle_debug_value_event(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -205,6 +226,7 @@ fn handle_debug_value_event(
     }
 }
 
+/// Emits a [DebugValueAddedEvent] whenever a [DebugValue] is added to an entity.
 fn emit_debug_value_added_event_system<T: Component>(
     query: Query<Entity, (Without<HasDebugWindow>, Added<DebugValue<T>>)>,
     mut events: EventWriter<DebugValueAddedEvent>,
@@ -214,6 +236,8 @@ fn emit_debug_value_added_event_system<T: Component>(
     }
 }
 
+/// Run as one of the last systems in the `debug` stage, deleting any [DebugWindow]s which do not contain
+/// any [DebugValue]s. Acts as automatic clean-up of unused [DebugWindow]s.
 fn remove_unused_debug_windows(
     mut commands: Commands,
     window_query: Query<(Entity, &DebugWindow)>,
@@ -231,6 +255,7 @@ pub trait AddDebugValue {
     fn debug_value<T: Component + std::fmt::Debug>(&mut self, label: &'static str) -> &mut Self;
 }
 
+/// Utility extension for [EntityCommands] for easily adding a [DebugValue] to an entity.
 impl AddDebugValue for EntityCommands<'_, '_, '_> {
     fn debug_value<T: Component + std::fmt::Debug>(&mut self, label: &'static str) -> &mut Self {
         self.insert(DebugValue::<T>::with_label(label))

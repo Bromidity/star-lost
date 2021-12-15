@@ -4,15 +4,22 @@ use bevy::prelude::*;
 
 use crate::debug::{debug_arrow_system, DebuggableValue};
 
+/// Translational velocity of the entity. Integrated by [velocity_system] into the entity [Transform]'s translational component.
 #[derive(Debug, Default, Component)]
 pub struct Velocity(pub Vec3);
 
+/// Angular velocity of the entity. Integrated by [angular_velocity_system] into the entity [Transform]'s rotational component.
 #[derive(Debug, Default, Component)]
 pub struct AngularVelocity(pub Vec3);
 
+/// The [drag_system] uses this component to dampen the [Velocity] and [AngularVelocity] components
 #[derive(Debug, Default, Component)]
 pub struct Drag(pub f32);
 
+/// Defines the *intended* acceleration of an entity. This is integrated into [Velocity] by [acceleration_system]
+/// Some systems directly overwrite this component's value.
+/// for example [Impulse](crate::ship::Impulse) or [AngularImpulse](crate::ship::AngularImpulse) on the ship.
+/// This is the primary way in which player controls & target tracking works.
 #[derive(Debug, Default, Component)]
 pub struct Acceleration(pub Vec3);
 
@@ -23,9 +30,11 @@ impl Deref for Acceleration {
     }
 }
 
+/// Angular acceleration of the entity. Integrated by [angular_acceleration_system] into the entity's [AngularVelocity] component.
 #[derive(Debug, Default, Component)]
 pub struct AngularAcceleration(pub Vec3);
 
+/// [Bundle](https://erasin.wang/books/bevy-cheatbook/programming/ec.html#component-bundles) containing common physics components.
 #[derive(Bundle, Default)]
 pub struct PhysicsBundle {
     pub transform: Transform,
@@ -37,6 +46,8 @@ pub struct PhysicsBundle {
     pub angular_acceleration: AngularAcceleration,
 }
 
+/// Adds the `Physics` systems to the application, and defines
+/// some of the physics components as [DebuggableValue](crate::debug::DebuggableValue)s (see: [AddDebugValue](crate::debug::AddDebugValue))
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
@@ -55,6 +66,7 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
+/// Integrates the [Velocity] into the entity [Transform]'s translational component
 pub fn velocity_system(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
     for (mut transform, velocity) in query.iter_mut() {
         let translated_velocity = transform.rotation * velocity.0;
@@ -62,6 +74,7 @@ pub fn velocity_system(time: Res<Time>, mut query: Query<(&mut Transform, &Veloc
     }
 }
 
+/// Integrates the [AngularVelocity] into the entity [Transform]'s rotational component
 pub fn angular_velocity_system(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &AngularVelocity)>,
@@ -76,6 +89,11 @@ pub fn angular_velocity_system(
     }
 }
 
+/// Linearly interpolates between ([Velocity] & [AngularVelocity]) and [Vec3::ZERO]
+/// by a factor of [Drag] * `time.delta_seconds()`, effectively slowing the respective velocities.
+/// I think timestep might affect this strangely. Assuming a 0.5s frametime, the system
+/// will halve the velocities of the entity, whereas a frametime >= 1.0 will immediately stop or
+/// even reverse the velocity of the object.
 pub fn drag_system(
     time: Res<Time>,
     mut query: Query<(&mut Velocity, &mut AngularVelocity, &Drag)>,
@@ -89,6 +107,7 @@ pub fn drag_system(
     }
 }
 
+/// Integrates the [AngularAcceleration] into [AngularVelocity]
 pub fn angular_acceleration_system(
     time: Res<Time>,
     mut query: Query<(&mut AngularVelocity, &AngularAcceleration)>,
@@ -98,6 +117,7 @@ pub fn angular_acceleration_system(
     }
 }
 
+/// Integrates [Acceleration] into [Velocity]
 pub fn acceleration_system(time: Res<Time>, mut query: Query<(&mut Velocity, &Acceleration)>) {
     for (mut velocity, acceleration) in query.iter_mut() {
         velocity.0 += acceleration.0 * time.delta_seconds();

@@ -3,12 +3,22 @@ use bevy::prelude::*;
 
 use crate::physics::{Acceleration, AngularAcceleration, PhysicsBundle};
 
+/// Specifies the Angular impulse imparted on the object via the [angular_impulse_system] into [AngularAcceleration].
+/// **NOTE:** The impulse is relative to the entity's local position, not the entity's position in the world.
+/// This means that applying an impulse of say [0.0, 0.0, 1.0] will always make the entity move along its local "forward"-axis relative to itself, rather than along the global Z-axis
 #[derive(Default, Component)]
 pub struct Impulse(pub Vec3);
 
+/// Specifies the impulse imparted on the object via the [impulse_system] into [Acceleration].
+/// **NOTE:** The impulse is relative to the entity's local rotation, not the entity's rotation in the world.
+/// This means that applying an angular impulse of say [0.0, 1.0, 0.0] will always make the entity rotate along its local yaw-axis relative to itself, rather than along the global Y-axis
 #[derive(Default, Component)]
 pub struct AngularImpulse(pub Vec3);
 
+/// This cobbled-together structure was/is intended to define the maximum acceleration of the ship in any direction.
+/// For example, it might make sense to define an instance of this structure that defines a ship which can accelerate very
+/// fast in the forward direction, but relatively slowly along the other axis to simulate a larger rear engine compared to smaller RCS-thrusters for instance.
+/// The structure is used by the [impulse_system] and [angular_impulse_system]s to limit the impact of an Impulse.
 #[derive(Component)]
 pub struct ThrustCharacteristics {
     pub min: Vec3,
@@ -27,6 +37,8 @@ impl Default for ThrustCharacteristics {
     }
 }
 
+/// [Bundle](https://erasin.wang/books/bevy-cheatbook/programming/ec.html#component-bundles) containing common Ship components.
+/// [PhysicsBundle](crate::physics::PhysicsBundle) + Ship control components
 #[derive(Default, Bundle)]
 pub struct ShipBundle {
     pub impulse: Impulse,
@@ -45,6 +57,8 @@ impl Plugin for ShipPlugin {
     }
 }
 
+/// Takes an entity's [Impulse] component and imparts it on the entity relative to the entity's current rotation
+/// while respecting the entity's [ThrustCharacteristics]
 pub fn impulse_system(
     mut query: Query<(
         &mut Acceleration,
@@ -73,6 +87,8 @@ pub fn impulse_system(
     }
 }
 
+/// Takes an entity's [AngularImpulse] component and imparts it on the entity relative to the entity's current rotation
+/// while respecting the entity's [ThrustCharacteristics]
 pub fn angular_impulse_system(
     mut query: Query<(
         &mut AngularAcceleration,
