@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.14"
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "58474d7c4a2dcd0684730500def03f30e5ebc0e6", features = ["bevy_gltf", "dynamic"] }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "add1818a05ad4b8d4672197afd477ab29f8446b5", default-features = false, features = ["bevy_gltf", "render", "bevy_winit", "dynamic", "x11"] }
