@@ -76,6 +76,6 @@ pub fn angular_targeting_system(
 pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
         // Poor man's integration. Bias slightly towards current velocity to give the approach a smooth curve
-        impulse.0 = (target.0 - transform.translation - velocity.0 * 2.0) * 2.0;
+        impulse.0 = (target.0 - transform.translation - velocity.0 * 3.0) * 10.0;
     }
 }

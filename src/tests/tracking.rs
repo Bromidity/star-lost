@@ -21,7 +21,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
                     rot: Vec3::from_slice(&[0.01, 0.01, 0.01]),
                 },
                 physics: PhysicsBundle {
-                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -2.0])),
+                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -5.0])),
                     transform: Transform::from_xyz(0.0, 5.0, 20.0),
                     ..Default::default()
                 },
