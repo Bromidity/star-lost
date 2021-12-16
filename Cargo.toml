@@ -7,4 +7,26 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.14"
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "add1818a05ad4b8d4672197afd477ab29f8446b5", default-features = false, features = ["bevy_gltf", "render", "bevy_winit", "dynamic", "x11"] }
+
+[dependencies.bevy]
+git = "https://github.com/bevyengine/bevy"
+rev = "add1818a05ad4b8d4672197afd477ab29f8446b5"
+default-features = false
+features = [
+    "bevy_gltf", 
+    "render", 
+    "bevy_winit", 
+    "dynamic",
+    "x11"
+]
+
+[dependencies.bevy_kira_audio]
+git = "https://github.com/NiklasEi/bevy_kira_audio"
+rev = "9a9a4c87e01ad2fb446852317e63f8fc103406c1"
+default-features = false
+features = [
+  "wav",
+  "flac",
+  "mp3",
+  "ogg",
+]
