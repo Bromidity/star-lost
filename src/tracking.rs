@@ -37,13 +37,20 @@ impl Plugin for TrackingPlugin {
 
 /// Maps an entity target into a position target by translating a [TargetEntity]'s [Transform].translation.
 pub fn targeting_entity_system(
-    mut query: Query<(&mut Target, &TargetEntity)>,
+    mut commands: Commands,
+    mut query: Query<(Entity, Option<&mut Target>, &TargetEntity)>,
     positions: Query<(&Transform, Option<&Velocity>)>,
 ) {
-    for (mut target, target_entity) in query.iter_mut() {
+    for (entity, target, target_entity) in query.iter_mut() {
         if let Ok((target_transform, velocity)) = positions.get(target_entity.0) {
-            *target =
+            let updated_target =
                 Target(target_transform.translation + velocity.map(|v| v.0).unwrap_or(Vec3::ZERO));
+
+            if let Some(mut target) = target {
+                *target = updated_target;
+            } else {
+                commands.entity(entity).insert(updated_target);
+            }
         }
     }
 }

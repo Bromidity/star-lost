@@ -3,12 +3,14 @@ use bevy_kira_audio::{Audio, AudioPlugin};
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
 use physics::PhysicsPlugin;
+use route::RoutePlugin;
 use ship::ShipPlugin;
 use tracking::TrackingPlugin;
 
 mod controls;
 mod debug;
 mod physics;
+mod route;
 mod ship;
 mod station;
 mod tests;
@@ -30,6 +32,7 @@ fn main() {
         .add_plugin(TrackingPlugin)
         .add_plugin(ShipPlugin)
         .add_plugin(ControlsPlugin)
+        .add_plugin(RoutePlugin)
         .add_system(ui::follow_object_system)
         .add_startup_system(setup)
         .add_startup_system(test_audio)
