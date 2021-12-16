@@ -1,8 +1,5 @@
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    pbr::AmbientLight,
-    prelude::*,
-};
+use bevy::{pbr::AmbientLight, prelude::*};
+use bevy_kira_audio::{Audio, AudioPlugin};
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
 use physics::PhysicsPlugin;
@@ -26,9 +23,8 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(Msaa { samples: 4 })
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
+        .add_plugin(AudioPlugin)
         .add_plugin(DebugPlugin)
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
@@ -36,6 +32,7 @@ fn main() {
         .add_plugin(ControlsPlugin)
         .add_system(ui::follow_object_system)
         .add_startup_system(setup)
+        .add_startup_system(test_audio)
         .run();
 }
 
@@ -43,20 +40,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     tests::station::spawn_station(
         &mut commands,
         &asset_server,
-        Vec3::from_slice(&[10.0, 10.0, 10.0]),
+        Vec3::from_slice(&[30.0, 10.0, 30.0]),
         -0.1,
     );
     tests::station::spawn_station(
         &mut commands,
         &asset_server,
-        -Vec3::from_slice(&[10.0, 10.0, 10.0]),
+        -Vec3::from_slice(&[30.0, 10.0, 30.0]),
         0.3,
     );
     tests::tracking::spawn_tracking_ships(&mut commands, &asset_server);
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-40.0, 20.0, 40.0)
+            transform: Transform::from_xyz(-50.0, 40.0, 50.0)
                 .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
             ..Default::default()
         })
@@ -67,4 +64,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         transform: Transform::from_xyz(3.0, 10.0, 3.0),
         ..Default::default()
     });
+}
+
+fn test_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
+    audio.play_looped(asset_server.load("audio/sci-fi-sounds/spaceEngineLow_002.ogg"));
 }

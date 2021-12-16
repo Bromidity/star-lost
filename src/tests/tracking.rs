@@ -15,17 +15,17 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
         // Leader
         commands
             .spawn_bundle(ShipBundle {
-                impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
-                angular_impulse: AngularImpulse(Vec3::from_slice(&[0.0, 0.5, 0.0])),
                 thrust_characteristics: ThrustCharacteristics {
                     min: Vec3::from_slice(&[-1.0, -2.0, -1.0]),
                     max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
-                    rot: Vec3::from_slice(&[0.5, 0.5, 0.5]),
+                    rot: Vec3::from_slice(&[0.01, 0.01, 0.01]),
                 },
                 physics: PhysicsBundle {
-                    transform: Transform::from_xyz(0.0, 5.0, 0.0),
+                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -2.0])),
+                    transform: Transform::from_xyz(0.0, 5.0, 20.0),
                     ..Default::default()
                 },
+                ..Default::default()
             })
             .debug_vector::<Acceleration>(asset_server)
             .with_children(|parent| {
@@ -45,7 +45,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
                 rot: Vec3::from_slice(&[10.0, 10.0, 10.0]),
             },
             physics: PhysicsBundle {
-                transform: Transform::from_xyz(5.0, -0.0, -0.0).with_rotation(Quat::from_euler(
+                transform: Transform::from_xyz(50.0, -0.0, -0.0).with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
                     0.0,
                     1.0,

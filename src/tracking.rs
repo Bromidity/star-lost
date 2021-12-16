@@ -38,11 +38,12 @@ impl Plugin for TrackingPlugin {
 /// Maps an entity target into a position target by translating a [TargetEntity]'s [Transform].translation.
 pub fn targeting_entity_system(
     mut query: Query<(&mut Target, &TargetEntity)>,
-    positions: Query<&Transform>,
+    positions: Query<(&Transform, Option<&Velocity>)>,
 ) {
     for (mut target, target_entity) in query.iter_mut() {
-        if let Ok(target_transform) = positions.get_component::<Transform>(target_entity.0) {
-            *target = Target(target_transform.translation);
+        if let Ok((target_transform, velocity)) = positions.get(target_entity.0) {
+            *target =
+                Target(target_transform.translation + velocity.map(|v| v.0).unwrap_or(Vec3::ZERO));
         }
     }
 }
@@ -70,21 +71,11 @@ pub fn angular_targeting_system(
     }
 }
 
-/// Attempts to accelerate any entity with a [Target] component forwards, assuming that
-/// the entity is approximately pointing at the target position.
+/// Perpetually to accelerate any entity with a [Target] component in such a way
+/// that it will arrive at the Target location... "soon".
 pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
-        let mut point_at = Transform::from_translation(transform.translation);
-        point_at.look_at(target.0, Vec3::Y);
-
-        // If we're pointing more or less directly at the target, accelerate
-        // otherwise, slow down.
-        let dist_diff = point_at.rotation.angle_between(transform.rotation);
-        let speed = if dist_diff < 1.0 {
-            Vec3::from_slice(&[0.0, 0.0, 1.0 - dist_diff]) * 10.0
-        } else {
-            transform.rotation.inverse() * velocity.0
-        };
-        impulse.0 = -speed;
+        // Poor man's integration. Bias slightly towards current velocity to give the approach a smooth curve
+        impulse.0 = (target.0 - transform.translation - velocity.0 * 2.0) * 2.0;
     }
 }

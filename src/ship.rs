@@ -62,17 +62,10 @@ impl Plugin for ShipPlugin {
     }
 }
 
-/// Takes an entity's [Impulse] component and imparts it on the entity relative to the entity's current rotation
+/// Takes an entity's [Impulse] component and imparts it on the entity
 /// while respecting the entity's [ThrustCharacteristics]
-pub fn impulse_system(
-    mut query: Query<(
-        &mut Acceleration,
-        &Transform,
-        &Impulse,
-        &ThrustCharacteristics,
-    )>,
-) {
-    for (mut acceleration, transform, impulse, thrust) in query.iter_mut() {
+pub fn impulse_system(mut query: Query<(&mut Acceleration, &Impulse, &ThrustCharacteristics)>) {
+    for (mut acceleration, impulse, thrust) in query.iter_mut() {
         acceleration.0 = if impulse.0.length_squared().is_normal() {
             let l = (impulse.0 / thrust.max).abs();
             let h = (impulse.0 / thrust.min).abs();
@@ -85,7 +78,7 @@ pub fn impulse_system(
                 .unwrap_or(0.0);
 
             // Finally rotate the impulse so it is relative to the ship position
-            transform.rotation * impulse.0.normalize() * smallest_factor
+            impulse.0.normalize() * smallest_factor
         } else {
             Vec3::ZERO
         };
