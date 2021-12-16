@@ -40,19 +40,19 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    tests::station::spawn_station(
+    let a = tests::station::spawn_station(
         &mut commands,
         &asset_server,
         Vec3::from_slice(&[30.0, 10.0, 30.0]),
         -0.1,
     );
-    tests::station::spawn_station(
+    let b = tests::station::spawn_station(
         &mut commands,
         &asset_server,
         -Vec3::from_slice(&[30.0, 10.0, 30.0]),
         0.3,
     );
-    tests::tracking::spawn_tracking_ships(&mut commands, &asset_server);
+    tests::route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {

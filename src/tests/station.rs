@@ -38,7 +38,7 @@ pub fn spawn_station(
     asset_server: &Res<AssetServer>,
     position: Vec3,
     rotspeed: f32,
-) {
+) -> Entity {
     // Just rotate the station a bit, so its rotation axis is
     // slightly wonky just because it looks cool
     let rot = Quat::from_rotation_x(-rotspeed * 1.5);
@@ -53,5 +53,6 @@ pub fn spawn_station(
         })
         .with_children(|parent| {
             donut().build(parent, asset_server, Vec3::ZERO, 0);
-        });
+        })
+        .id()
 }
