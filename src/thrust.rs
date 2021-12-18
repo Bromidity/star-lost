@@ -94,9 +94,11 @@ fn animate_thruster_system(
             time.delta_seconds() * 300.0 % THRUST_WIGGLE_MULTIPLIER
                 - THRUST_WIGGLE_MULTIPLIER / 2.0,
         );
-        let current_length = transform.scale.length();
-        transform.scale +=
-            ((current_length - thrust.thrust) * time.delta_seconds() * THRUST_ADJUST_SPEED)
-                * thrust.scale;
+        let current_length = (transform.scale * thrust.scale).length();
+        transform.scale += (current_length - thrust.thrust)
+            * time.delta_seconds()
+            * thrust.scale
+            * THRUST_ADJUST_SPEED;
+        println!("{:?}", transform.scale);
     }
 }
