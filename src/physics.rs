@@ -19,6 +19,13 @@ impl Deref for Velocity {
 #[derive(Debug, Default, Component)]
 pub struct AngularVelocity(pub Vec3);
 
+impl Deref for AngularVelocity {
+    type Target = Vec3;
+    fn deref(&self) -> &Vec3 {
+        &self.0
+    }
+}
+
 /// The [drag_system] uses this component to dampen the [Velocity] and [AngularVelocity] components
 #[derive(Debug, Default, Component)]
 pub struct Drag(pub f32);
@@ -40,6 +47,13 @@ impl Deref for Acceleration {
 /// Angular acceleration of the entity. Integrated by [angular_acceleration_system] into the entity's [AngularVelocity] component.
 #[derive(Debug, Default, Component)]
 pub struct AngularAcceleration(pub Vec3);
+
+impl Deref for AngularAcceleration {
+    type Target = Vec3;
+    fn deref(&self) -> &Vec3 {
+        &self.0
+    }
+}
 
 /// [Bundle](https://erasin.wang/books/bevy-cheatbook/programming/ec.html#component-bundles) containing common physics components.
 #[derive(Bundle, Default)]

@@ -2,10 +2,11 @@ use bevy::{math::EulerRot, prelude::*};
 use rand::Rng;
 
 use crate::{
-    debug::{AddDebugArrow, DebugVector},
+    debug::DebugVector,
     physics::*,
     route::{Route, Waypoint},
     ship::*,
+    tracking::{AccelerateToInterceptTarget, PointInDirectionOfAcceleration},
 };
 
 #[allow(dead_code)]
@@ -74,7 +75,8 @@ pub fn spawn_route_ship(
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
             })
-            //.debug_vector::<Acceleration>(asset_server)
-            .insert(route);
+            .insert(route)
+            .insert(PointInDirectionOfAcceleration)
+            .insert(AccelerateToInterceptTarget);
     }
 }

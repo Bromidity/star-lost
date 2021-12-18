@@ -21,7 +21,7 @@ impl Plugin for ControlsPlugin {
 
 fn initial_grab_cursor(mut windows: ResMut<Windows>) {
     let window = windows.get_primary_mut().unwrap();
-    //window.set_cursor_lock_mode(true);
+    window.set_cursor_lock_mode(true);
     //window.set_cursor_visibility(false);
     window.set_cursor_position(Vec2::from_slice(&[
         window.width() / 2.0,
@@ -34,11 +34,11 @@ fn initial_grab_cursor(mut windows: ResMut<Windows>) {
 pub fn ship_translational_movement_system(
     windows: Res<Windows>,
     keys: Res<Input<KeyCode>>,
-    mut query: Query<&mut Impulse, With<PlayerControlled>>,
+    mut query: Query<(&mut Impulse, &Transform), With<PlayerControlled>>,
 ) {
     let window = windows.get_primary().unwrap();
     if window.cursor_locked() {
-        for mut impulse in query.iter_mut() {
+        for (mut impulse, transform) in query.iter_mut() {
             let mut new_impulse = Vec3::ZERO;
             for key in keys.get_pressed() {
                 new_impulse += match key {
@@ -52,34 +52,43 @@ pub fn ship_translational_movement_system(
                 };
             }
 
-            *impulse = Impulse(new_impulse);
+            *impulse = Impulse(transform.rotation * new_impulse * 10.0);
         }
     }
 }
 /// Set entities with [PlayerControlled] component's [AngularImpulse] component values based on user input.
-/// This system is super broken and does not work very well. Nausea *may* occur
 pub fn ship_rotational_movement_system(
     windows: Res<Windows>,
-    mut query: Query<&mut AngularImpulse, With<PlayerControlled>>,
+    mut query: Query<(&mut AngularImpulse, &Transform), With<PlayerControlled>>,
 ) {
     let window = windows.get_primary().unwrap();
 
-    for mut impulse in query.iter_mut() {
+    for (mut impulse, transform) in query.iter_mut() {
         if window.cursor_locked() {
-            let pos = window.physical_cursor_position().unwrap().as_vec2();
-            let relative_pos = pos
-                / Vec2::from_slice(&[window.width() as f32, window.height() as f32])
-                - Vec2::from_slice(&[0.5, 0.5]);
+            if let Some(pos) = window.physical_cursor_position() {
+                let pos = pos.as_vec2();
 
-            // Dead zone in the middle
-            if relative_pos.length() > 0.1 {
-                let imp = Vec3::from_slice(&[relative_pos.y, -relative_pos.x, 0.0])
-                    .clamp(-Vec3::ONE, Vec3::ONE)
-                    .normalize();
+                // Translate position into (-0.5, 0.5) space
+                let relative_pos = pos
+                    / Vec2::from_slice(&[window.width() as f32, window.height() as f32])
+                    - Vec2::from_slice(&[0.5, 0.5]);
 
-                *impulse = AngularImpulse(imp);
-            } else {
-                *impulse = AngularImpulse::default();
+                let imp = Vec3::from_slice(&[
+                    if relative_pos.y.abs() > 0.1 {
+                        relative_pos.y
+                    } else {
+                        0.0
+                    },
+                    -if relative_pos.x.abs() > 0.1 {
+                        relative_pos.x
+                    } else {
+                        0.0
+                    },
+                    0.0,
+                ]);
+
+                // Translate the impulse into world space
+                *impulse = AngularImpulse(transform.rotation * imp);
             }
         } else {
             *impulse = AngularImpulse::default();

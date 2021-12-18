@@ -5,6 +5,14 @@ use crate::{
     ship::{AngularImpulse, Impulse},
 };
 
+/// This marker component enables the [rotate_to_face_acceleration_direction] system for this entity.
+#[derive(Component)]
+pub struct PointInDirectionOfAcceleration;
+
+/// This marker component enables the [accelerate_towards_target] system for this entity.
+#[derive(Component)]
+pub struct AccelerateToInterceptTarget;
+
 /// Set the target entity as the entity's target.
 /// [targeting_entity_system] will continuously update the entity's [Target] position
 /// with the coordinates of the target entity.
@@ -19,19 +27,13 @@ pub struct TargetEntity(pub Entity);
 #[derive(Component)]
 pub struct Target(pub Vec3);
 
-#[derive(Bundle)]
-pub struct TargetingBundle {
-    target_entity: TargetEntity,
-    target: Target,
-}
-
 pub struct TrackingPlugin;
 
 impl Plugin for TrackingPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(targeting_entity_system)
-            .add_system(rotate_to_face_acceleration_direction)
-            .add_system(accelerate_towards_target);
+            .add_system(rotate_to_face_acceleration_direction_system)
+            .add_system(accelerate_towards_target_system);
     }
 }
 
@@ -58,13 +60,16 @@ pub fn targeting_entity_system(
 /// Attempts to point in the direction of acceleration. Assuming that the rear engine
 /// is more powerful (according to thrust characteristics), it makes sense to always
 /// point in the intended direction of travel to maximize thrust potential
-pub fn rotate_to_face_acceleration_direction(
-    mut query: Query<(
-        &mut AngularImpulse,
-        &AngularVelocity,
-        &Transform,
-        &Acceleration,
-    )>,
+pub fn rotate_to_face_acceleration_direction_system(
+    mut query: Query<
+        (
+            &mut AngularImpulse,
+            &AngularVelocity,
+            &Transform,
+            &Acceleration,
+        ),
+        With<PointInDirectionOfAcceleration>,
+    >,
 ) {
     for (mut angular_impulse, angular_velocity, transform, acceleration) in query.iter_mut() {
         // Convert acceleration to a quaternion so we can compare them as orientations
@@ -88,7 +93,12 @@ pub fn rotate_to_face_acceleration_direction(
 
 /// Perpetually to accelerate any entity with a [Target] component in such a way
 /// that it will arrive at the Target location... "soon".
-pub fn accelerate_towards_target(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
+pub fn accelerate_towards_target_system(
+    mut query: Query<
+        (&mut Impulse, &Velocity, &Transform, &Target),
+        With<AccelerateToInterceptTarget>,
+    >,
+) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
         // Poor man's integration. Bias slightly towards current velocity to give the approach a smooth curve
         let dir = target.0 - transform.translation - velocity.0 * 5.0;
