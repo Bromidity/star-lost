@@ -1,10 +1,11 @@
 use bevy::{pbr::AmbientLight, prelude::*};
-use bevy_kira_audio::{Audio, AudioPlugin};
+use bevy_kira_audio::AudioPlugin;
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
 use impulse::ShipPlugin;
 use physics::PhysicsPlugin;
 use route::RoutePlugin;
+use thrust::ThrustPlugin;
 use tracking::TrackingPlugin;
 
 mod controls;
@@ -14,8 +15,10 @@ mod physics;
 mod route;
 mod station;
 mod tests;
+mod thrust;
 mod tracking;
 mod ui;
+mod vessel;
 
 fn main() {
     App::new()
@@ -33,9 +36,9 @@ fn main() {
         .add_plugin(ShipPlugin)
         .add_plugin(ControlsPlugin)
         .add_plugin(RoutePlugin)
+        .add_plugin(ThrustPlugin)
         .add_system(ui::follow_object_system)
         .add_startup_system(setup)
-        .add_startup_system(test_audio)
         .run();
 }
 
@@ -70,8 +73,4 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         transform: Transform::from_xyz(3.0, 10.0, 3.0),
         ..Default::default()
     });
-}
-
-fn test_audio(asset_server: Res<AssetServer>, audio: Res<Audio>) {
-    audio.play_looped(asset_server.load("audio/sci-fi-sounds/spaceEngineLow_002.ogg"));
 }

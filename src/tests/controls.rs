@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    controls::PlayerControlled, debug::AddDebugValue, impulse::*, physics::*, ui::WorldCamera,
-};
+use crate::{controls::PlayerControlled, impulse::*, physics::*, ui::WorldCamera};
 
 #[allow(dead_code)]
 pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>) {
@@ -31,7 +29,5 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
                 })
                 .insert(WorldCamera);
         })
-        .insert(PlayerControlled)
-        .debug_value::<Impulse>("trans")
-        .debug_value::<AngularImpulse>("rot");
+        .insert(PlayerControlled);
 }
