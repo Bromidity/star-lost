@@ -10,7 +10,7 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
     commands
         .spawn_bundle(ShipBundle {
             physics: PhysicsBundle {
-                drag: Drag(0.2),
+                drag: Drag(0.5),
                 ..Default::default()
             },
             thrust_characteristics: ThrustCharacteristics {
@@ -24,8 +24,8 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
             parent.spawn_scene(model.clone());
             parent
                 .spawn_bundle(PerspectiveCameraBundle {
-                    transform: Transform::from_xyz(0.0, 0.2, 0.6)
-                        .looking_at(Vec3::new(0.0, 0.2, 0.0), Vec3::Y),
+                    transform: Transform::from_xyz(0.0, 0.1, 0.6)
+                        .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
                     ..Default::default()
                 })
                 .insert(WorldCamera);

@@ -59,6 +59,7 @@ pub fn ship_translational_movement_system(
 /// Set entities with [PlayerControlled] component's [AngularImpulse] component values based on user input.
 pub fn ship_rotational_movement_system(
     windows: Res<Windows>,
+    keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut AngularImpulse, &Transform), With<PlayerControlled>>,
 ) {
     let window = windows.get_primary().unwrap();
@@ -73,7 +74,7 @@ pub fn ship_rotational_movement_system(
                     / Vec2::from_slice(&[window.width() as f32, window.height() as f32])
                     - Vec2::from_slice(&[0.5, 0.5]);
 
-                let imp = Vec3::from_slice(&[
+                let mut imp = Vec3::from_slice(&[
                     if relative_pos.y.abs() > 0.1 {
                         relative_pos.y
                     } else {
@@ -86,6 +87,14 @@ pub fn ship_rotational_movement_system(
                     },
                     0.0,
                 ]);
+
+                for key in keys.get_pressed() {
+                    imp += match key {
+                        KeyCode::Q => Vec3::from_slice(&[0.0, 0.0, 1.0]),
+                        KeyCode::E => Vec3::from_slice(&[0.0, 0.0, -1.0]),
+                        _ => Vec3::ZERO,
+                    };
+                }
 
                 // Translate the impulse into world space
                 *impulse = AngularImpulse(transform.rotation * imp);
