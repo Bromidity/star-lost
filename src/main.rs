@@ -56,8 +56,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-100.0, 80.0, 100.0)
-                .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
+            transform: Transform::from_xyz(-40.0, 15.0, 40.0)
+                .looking_at(Vec3::new(30.0, 10.0, 30.0), Vec3::Y),
             ..Default::default()
         })
         .insert(ui::WorldCamera);

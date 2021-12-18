@@ -97,7 +97,7 @@ pub fn point_travelling_system(
 
 pub fn point_reached_system(mut query: Query<(&mut Route, &Transform, &Target)>) {
     for (mut route, transform, target) in query.iter_mut() {
-        if (transform.translation - target.0).length_squared() < 20.0 {
+        if (transform.translation - target.0).length_squared() < 50.0 {
             route.next();
         }
     }

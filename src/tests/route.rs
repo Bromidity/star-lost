@@ -14,7 +14,7 @@ pub fn spawn_route_ship(
     asset_server: &Res<AssetServer>,
     mut waypoints: Vec<Waypoint>,
 ) {
-    let model = asset_server.load("models/ship.glb#Scene0");
+    let model = asset_server.load("models/ship_small.glb#Scene0");
 
     let id = {
         // Leader
@@ -32,7 +32,7 @@ pub fn spawn_route_ship(
                 },
                 ..Default::default()
             })
-            .debug_vector::<Acceleration>(asset_server)
+            //.debug_vector::<Acceleration>(asset_server)
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
                 parent.spawn_bundle((DebugVector::<Acceleration>::default(),));
@@ -74,7 +74,7 @@ pub fn spawn_route_ship(
             .with_children(|parent| {
                 parent.spawn_scene(model.clone());
             })
-            .debug_vector::<Acceleration>(asset_server)
+            //.debug_vector::<Acceleration>(asset_server)
             .insert(route);
     }
 }
