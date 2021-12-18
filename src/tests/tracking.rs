@@ -2,8 +2,8 @@ use bevy::{math::EulerRot, prelude::*};
 
 use crate::{
     debug::{AddDebugArrow, AddDebugValue, DebugVector},
+    impulse::*,
     physics::*,
-    ship::*,
     tracking::*,
 };
 

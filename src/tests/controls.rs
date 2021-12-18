@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
 use crate::{
-    controls::PlayerControlled, debug::AddDebugValue, physics::*, ship::*, ui::WorldCamera,
+    controls::PlayerControlled, debug::AddDebugValue, impulse::*, physics::*, ui::WorldCamera,
 };
 
 #[allow(dead_code)]
 pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>) {
-    let model = asset_server.load("models/ship_small.glb#Scene0");
+    let model = asset_server.load("models/ship_small_thrust.glb#Scene0");
     commands
         .spawn_bundle(ShipBundle {
             physics: PhysicsBundle {

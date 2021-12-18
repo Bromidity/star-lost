@@ -1,6 +1,6 @@
 use bevy::{app::ManualEventReader, input::mouse::MouseMotion, prelude::*};
 
-use crate::ship::{AngularImpulse, Impulse};
+use crate::impulse::{AngularImpulse, Impulse};
 
 /// Marks an entity as controlled by the player, meaning [ship_translational_movement_system]
 /// and [ship_rotational_movement_system] will attempt to apply [Impulse] and [AngularImpulse]

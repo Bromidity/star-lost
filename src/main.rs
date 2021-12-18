@@ -2,16 +2,16 @@ use bevy::{pbr::AmbientLight, prelude::*};
 use bevy_kira_audio::{Audio, AudioPlugin};
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
+use impulse::ShipPlugin;
 use physics::PhysicsPlugin;
 use route::RoutePlugin;
-use ship::ShipPlugin;
 use tracking::TrackingPlugin;
 
 mod controls;
 mod debug;
+mod impulse;
 mod physics;
 mod route;
-mod ship;
 mod station;
 mod tests;
 mod tracking;

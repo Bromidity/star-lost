@@ -3,9 +3,9 @@ use rand::Rng;
 
 use crate::{
     debug::DebugVector,
+    impulse::*,
     physics::*,
     route::{Route, Waypoint},
-    ship::*,
     tracking::{AccelerateToInterceptTarget, PointInDirectionOfAcceleration},
 };
 

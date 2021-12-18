@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
+    impulse::{AngularImpulse, Impulse},
     physics::{Acceleration, AngularVelocity, Velocity},
-    ship::{AngularImpulse, Impulse},
 };
 
 /// This marker component enables the [rotate_to_face_acceleration_direction] system for this entity.
