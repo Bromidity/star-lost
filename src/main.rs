@@ -56,7 +56,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-50.0, 40.0, 50.0)
+            transform: Transform::from_xyz(-100.0, 80.0, 100.0)
                 .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
             ..Default::default()
         })

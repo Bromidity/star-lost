@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.14"
+rand = { version = "0.8.4", features = ["std", "std_rng"] }
 
 [dependencies.bevy]
 git = "https://github.com/bevyengine/bevy"

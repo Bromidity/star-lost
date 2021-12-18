@@ -40,9 +40,9 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
         .spawn_bundle(ShipBundle {
             impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
             thrust_characteristics: ThrustCharacteristics {
-                min: Vec3::from_slice(&[-1.0, -1.0, -1.0]),
+                min: Vec3::from_slice(&[-1.0, -1.0, -10.0]),
                 max: Vec3::from_slice(&[1.0, 1.0, 1.0]),
-                rot: Vec3::from_slice(&[10.0, 10.0, 10.0]),
+                rot: Vec3::from_slice(&[100.0, 100.0, 100.0]),
             },
             physics: PhysicsBundle {
                 transform: Transform::from_xyz(50.0, -0.0, -0.0).with_rotation(Quat::from_euler(

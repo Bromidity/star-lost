@@ -8,11 +8,7 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DebugValueAddedEvent>()
-            .add_stage_after(
-                CoreStage::PostUpdate,
-                "debug",
-                SystemStage::single_threaded(),
-            )
+            .add_stage_after(CoreStage::PostUpdate, "debug", SystemStage::parallel())
             .add_system_to_stage(
                 "debug",
                 handle_debug_value_event.label("debug_value_event_handler"),

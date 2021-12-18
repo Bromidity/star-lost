@@ -64,21 +64,33 @@ impl Plugin for ShipPlugin {
 
 /// Takes an entity's [Impulse] component and imparts it on the entity
 /// while respecting the entity's [ThrustCharacteristics]
-pub fn impulse_system(mut query: Query<(&mut Acceleration, &Impulse, &ThrustCharacteristics)>) {
-    for (mut acceleration, impulse, thrust) in query.iter_mut() {
+pub fn impulse_system(
+    mut query: Query<(
+        &mut Acceleration,
+        &Impulse,
+        &Transform,
+        &ThrustCharacteristics,
+    )>,
+) {
+    for (mut acceleration, impulse, transform, thrust) in query.iter_mut() {
         acceleration.0 = if impulse.0.length_squared().is_normal() {
-            let l = (impulse.0 / thrust.max).abs();
-            let h = (impulse.0 / thrust.min).abs();
+            // Thrust characteristics are defined relative to the ship body,
+            // so we need to apply the inverse rotation to the set impulse
+            // before we compare it to the Thrust Characteristics, otherwise
+            // they will be defining world space constraints.
+            let translated_impulse = transform.rotation.inverse() * impulse.0;
 
-            let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z, impulse.0.length()]
+            let l = (thrust.max / translated_impulse).abs();
+            let h = (thrust.min / translated_impulse).abs();
+
+            let smallest_factor = [l.x, l.y, l.z, h.x, h.y, h.z, translated_impulse.length()]
                 .iter()
                 .cloned()
                 .filter(|f| f.is_normal())
                 .reduce(f32::min)
                 .unwrap_or(0.0);
 
-            // Finally rotate the impulse so it is relative to the ship position
-            impulse.0.normalize() * smallest_factor
+            impulse.0 * smallest_factor
         } else {
             Vec3::ZERO
         };
@@ -106,7 +118,7 @@ pub fn angular_impulse_system(
                 .reduce(f32::min)
                 .unwrap_or(0.0);
 
-            impulse.0.normalize() * smallest_factor
+            impulse.0 * smallest_factor
         } else {
             Vec3::ZERO
         }

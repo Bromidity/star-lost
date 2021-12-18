@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    physics::{AngularVelocity, Velocity},
+    physics::{Acceleration, AngularVelocity, Velocity},
     ship::{AngularImpulse, Impulse},
 };
 
@@ -30,8 +30,8 @@ pub struct TrackingPlugin;
 impl Plugin for TrackingPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(targeting_entity_system)
-            .add_system(angular_targeting_system)
-            .add_system(approach_system);
+            .add_system(rotate_to_face_acceleration_direction)
+            .add_system(accelerate_towards_target);
     }
 }
 
@@ -55,15 +55,21 @@ pub fn targeting_entity_system(
     }
 }
 
-/// Attempts to point entities with [Target] components towards their target positions by
-/// applying an [AngularImpulse]
-pub fn angular_targeting_system(
-    mut query: Query<(&mut AngularImpulse, &AngularVelocity, &Transform, &Target)>,
+/// Attempts to point in the direction of acceleration. Assuming that the rear engine
+/// is more powerful (according to thrust characteristics), it makes sense to always
+/// point in the intended direction of travel to maximize thrust potential
+pub fn rotate_to_face_acceleration_direction(
+    mut query: Query<(
+        &mut AngularImpulse,
+        &AngularVelocity,
+        &Transform,
+        &Acceleration,
+    )>,
 ) {
-    for (mut angular_impulse, angular_velocity, transform, target) in query.iter_mut() {
-        // point_at is the target Orientation
-        let mut point_at = Transform::from_translation(transform.translation);
-        point_at.look_at(target.0, Vec3::Y);
+    for (mut angular_impulse, angular_velocity, transform, acceleration) in query.iter_mut() {
+        // Convert acceleration to a quaternion so we can compare them as orientations
+        let mut point_at = Transform::from_translation(Vec3::ZERO);
+        point_at.look_at(acceleration.0, Vec3::Y);
 
         // Quaternions can flip direction apparently at some odd angles.
         let diff = if point_at.rotation.dot(transform.rotation) <= 0.0 {
@@ -72,17 +78,20 @@ pub fn angular_targeting_system(
             (point_at.rotation * transform.rotation.inverse()).normalize()
         };
 
-        // Get the difference between target Orientation and current Orientation
+        // Get the difference between acceleration vector and current Orientation
         let (diff, _) = diff.to_axis_angle();
-        angular_impulse.0 = (diff - angular_velocity.0 * 3.0).normalize()
+
+        let dir = diff - angular_velocity.0;
+        angular_impulse.0 = dir.normalize() * (dir.length() * 2.0).sqrt();
     }
 }
 
 /// Perpetually to accelerate any entity with a [Target] component in such a way
 /// that it will arrive at the Target location... "soon".
-pub fn approach_system(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
+pub fn accelerate_towards_target(mut query: Query<(&mut Impulse, &Velocity, &Transform, &Target)>) {
     for (mut impulse, velocity, transform, target) in query.iter_mut() {
         // Poor man's integration. Bias slightly towards current velocity to give the approach a smooth curve
-        impulse.0 = (target.0 - transform.translation - velocity.0 * 3.0) * 10.0;
+        let dir = target.0 - transform.translation - velocity.0 * 5.0;
+        impulse.0 = dir.normalize() * (dir.length() * 2.0).sqrt();
     }
 }

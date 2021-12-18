@@ -1,7 +1,8 @@
 use bevy::{math::EulerRot, prelude::*};
+use rand::Rng;
 
 use crate::{
-    debug::{AddDebugArrow, AddDebugValue, DebugVector},
+    debug::{AddDebugArrow, DebugVector},
     physics::*,
     route::{Route, Waypoint},
     ship::*,
@@ -40,31 +41,40 @@ pub fn spawn_route_ship(
     };
 
     waypoints.push(id.into());
+    let mut rng = rand::thread_rng();
 
-    // Follower
-    commands
-        .spawn_bundle(ShipBundle {
-            impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
-            thrust_characteristics: ThrustCharacteristics {
-                min: Vec3::from_slice(&[-0.1, -0.1, -1.0]),
-                max: Vec3::from_slice(&[0.1, 0.1, 1.0]),
-                rot: Vec3::from_slice(&[10.0, 10.0, 10.0]),
-            },
-            physics: PhysicsBundle {
-                transform: Transform::from_xyz(50.0, -0.0, -0.0).with_rotation(Quat::from_euler(
-                    EulerRot::XYZ,
-                    0.0,
-                    1.0,
-                    0.0,
-                )),
+    for i in 0..10 {
+        let mut route = Route::from(waypoints.clone());
+        route.set_waypoint(i);
+
+        commands
+            .spawn_bundle(ShipBundle {
+                impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
+                thrust_characteristics: ThrustCharacteristics {
+                    min: Vec3::from_slice(&[-0.1, -0.1, -1.0]),
+                    max: Vec3::from_slice(&[0.1, 0.1, 1.0]),
+                    rot: Vec3::from_slice(&[10.0, 10.0, 10.0]),
+                },
+                physics: PhysicsBundle {
+                    transform: Transform::from_xyz(
+                        rng.gen_range(-50.0..50.0),
+                        rng.gen_range(-50.0..50.0),
+                        rng.gen_range(-50.0..50.0),
+                    )
+                    .with_rotation(Quat::from_euler(
+                        EulerRot::XYZ,
+                        0.0,
+                        1.0,
+                        0.0,
+                    )),
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            parent.spawn_scene(model.clone());
-        })
-        .debug_vector::<Acceleration>(asset_server)
-        .debug_value::<Route>("route")
-        .insert(Route::from(waypoints));
+            })
+            .with_children(|parent| {
+                parent.spawn_scene(model.clone());
+            })
+            .debug_vector::<Acceleration>(asset_server)
+            .insert(route);
+    }
 }

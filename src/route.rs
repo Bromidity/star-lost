@@ -25,6 +25,10 @@ impl Route {
     pub fn next(&mut self) {
         self.current_waypoint = (self.current_waypoint + 1) % self.waypoints.len();
     }
+
+    pub fn set_waypoint(&mut self, id: usize) {
+        self.current_waypoint = id % self.waypoints.len();
+    }
 }
 
 impl From<Vec<Waypoint>> for Route {
@@ -36,7 +40,7 @@ impl From<Vec<Waypoint>> for Route {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Waypoint {
     TargetEntity(Entity),
     Target(Vec3),
