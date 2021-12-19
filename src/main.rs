@@ -18,7 +18,6 @@ mod tests;
 mod thrust;
 mod tracking;
 mod ui;
-mod vessel;
 
 fn main() {
     App::new()
