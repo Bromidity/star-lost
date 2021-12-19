@@ -51,9 +51,9 @@ pub struct ShipBundle {
     pub physics: PhysicsBundle,
 }
 
-pub struct ShipPlugin;
+pub struct ImpulsePlugin;
 
-impl Plugin for ShipPlugin {
+impl Plugin for ImpulsePlugin {
     fn build(&self, app: &mut App) {
         app.add_system(impulse_system)
             .add_system(angular_impulse_system)

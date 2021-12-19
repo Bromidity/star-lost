@@ -2,7 +2,7 @@ use bevy::{pbr::AmbientLight, prelude::*};
 use bevy_kira_audio::AudioPlugin;
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
-use impulse::ShipPlugin;
+use impulse::ImpulsePlugin;
 use physics::PhysicsPlugin;
 use route::RoutePlugin;
 use thrust::ThrustPlugin;
@@ -32,7 +32,7 @@ fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(PhysicsPlugin)
         .add_plugin(TrackingPlugin)
-        .add_plugin(ShipPlugin)
+        .add_plugin(ImpulsePlugin)
         .add_plugin(ControlsPlugin)
         .add_plugin(RoutePlugin)
         .add_plugin(ThrustPlugin)
