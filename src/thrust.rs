@@ -99,6 +99,5 @@ fn animate_thruster_system(
             * time.delta_seconds()
             * thrust.scale
             * THRUST_ADJUST_SPEED;
-        println!("{:?}", transform.scale);
     }
 }
