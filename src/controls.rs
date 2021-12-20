@@ -1,6 +1,10 @@
 use bevy::{app::ManualEventReader, input::mouse::MouseMotion, prelude::*};
 
-use crate::impulse::{AngularImpulse, Impulse};
+use crate::{
+    impulse::{AngularImpulse, Impulse},
+    physics::{AngularVelocity, Velocity},
+    ui::WorldCamera,
+};
 
 /// Marks an entity as controlled by the player, meaning [ship_translational_movement_system]
 /// and [ship_rotational_movement_system] will attempt to apply [Impulse] and [AngularImpulse]
@@ -14,6 +18,7 @@ impl Plugin for ControlsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(ship_translational_movement_system)
             .add_system(ship_rotational_movement_system)
+            .add_system(animate_ship_camera_effects)
             .add_startup_system(initial_grab_cursor)
             .init_resource::<ManualEventReader<MouseMotion>>();
     }
@@ -56,6 +61,7 @@ pub fn ship_translational_movement_system(
         }
     }
 }
+
 /// Set entities with [PlayerControlled] component's [AngularImpulse] component values based on user input.
 pub fn ship_rotational_movement_system(
     windows: Res<Windows>,
@@ -101,6 +107,47 @@ pub fn ship_rotational_movement_system(
             }
         } else {
             *impulse = AngularImpulse::default();
+        }
+    }
+}
+
+pub fn animate_ship_camera_effects(
+    mut cameras: Query<(&mut Transform, &Parent), With<WorldCamera>>,
+    ship: Query<(&Transform, &Velocity, &AngularVelocity), Without<WorldCamera>>,
+) {
+    for (mut cam_trans, parent) in cameras.iter_mut() {
+        if let Ok((ship_trans, velocity, angular_velocity)) = ship.get(parent.0) {
+            let translation_from_speed = {
+                let local_velocity = ship_trans.rotation.inverse() * velocity.0;
+                let vel = local_velocity.length();
+                if vel.is_normal() {
+                    -local_velocity
+                } else {
+                    Vec3::ZERO
+                }
+            };
+
+            let translation_from_spin = {
+                let angular_velocity = ship_trans.rotation.inverse() * angular_velocity.0;
+                let ang_vel = angular_velocity.length();
+                if ang_vel.is_normal() {
+                    Vec3::from_slice(&[-angular_velocity.y, angular_velocity.x, 0.0])
+                } else {
+                    Vec3::ZERO
+                }
+            } * 10.0;
+
+            let offset = {
+                let offset = translation_from_speed + translation_from_spin;
+                let len = offset.length();
+                if len.is_normal() {
+                    offset.normalize() * len.powf(0.90) * 0.03
+                } else {
+                    Vec3::ZERO
+                }
+            };
+
+            cam_trans.translation = Vec3::from_slice(&[0.0, 0.05, 0.6]) + offset;
         }
     }
 }
