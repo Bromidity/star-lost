@@ -56,20 +56,18 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     tests::route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
 
-    /*
-    commands
-        .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-40.0, 15.0, 40.0)
-                .looking_at(Vec3::new(30.0, 10.0, 30.0), Vec3::Y),
-            ..Default::default()
-        })
-        .insert(ui::WorldCamera);
-    */
     tests::controls::spawn_player_ship(&mut commands, asset_server);
     commands.spawn_bundle(UiCameraBundle::default());
 
     commands.spawn_bundle(PointLightBundle {
-        transform: Transform::from_xyz(3.0, 10.0, 3.0),
+        point_light: PointLight {
+            color: Color::WHITE,
+            intensity: 50000.0,
+            range: 1000.0,
+            shadows_enabled: true,
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(3.0, 40.0, 30.0),
         ..Default::default()
     });
 }
