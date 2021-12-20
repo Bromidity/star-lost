@@ -2,12 +2,16 @@ use bevy::prelude::*;
 
 use crate::physics::Acceleration;
 
+/// This is the exponent with which the maximum thrust is approached.
+/// 0.5 means approach target thrust at the square root of the difference
+const THRUST_ADJUST_SPEED: f32 = 0.5;
 const THRUST_WIGGLE_MULTIPLIER: f32 = 0.01;
-const THRUST_ADJUST_SPEED: f32 = 2.0;
+const THRUST_SCALE_MULTIPLIER: f32 = 20.0;
 
 #[derive(Debug, Component)]
 pub struct AnimatedThruster {
     pub vessel: Entity,
+    pub initial_scale: Vec3,
     pub scale: Vec3,
     pub thrust: f32,
 }
@@ -26,7 +30,7 @@ impl Plugin for ThrustPlugin {
 /// and tags them for thrust animation.
 fn tag_thrusters_for_animation_system(
     mut commands: Commands,
-    potential_thrusters: Query<(Entity, &Name, &Parent), Added<Name>>,
+    potential_thrusters: Query<(Entity, &Transform, &Name, &Parent), Added<Name>>,
     parents: Query<(Option<&Parent>, Option<&Acceleration>)>,
 ) {
     fn find_simulated_parent(
@@ -44,7 +48,7 @@ fn tag_thrusters_for_animation_system(
         }
     }
 
-    for (thruster, name, parent) in potential_thrusters.iter() {
+    for (thruster, transform, name, parent) in potential_thrusters.iter() {
         if name.as_str().contains("anim_thrust_z_neg") {
             if let Some(ship) = find_simulated_parent(&parents, parent.0) {
                 debug!(
@@ -54,6 +58,7 @@ fn tag_thrusters_for_animation_system(
                 );
                 commands.entity(thruster).insert(AnimatedThruster {
                     vessel: ship,
+                    initial_scale: transform.scale,
                     scale: -Vec3::Z,
                     thrust: 0.0,
                 });
@@ -66,15 +71,18 @@ fn tag_thrusters_for_animation_system(
 
 /// Sets a thruster's "Thrust" based on the acceleration of its parent
 fn update_thrust_from_acceleration_system(
+    time: Res<Time>,
     mut thrusters: Query<&mut AnimatedThruster>,
     parent: Query<(&Transform, &Acceleration)>,
 ) {
     for mut thruster in thrusters.iter_mut() {
-        thruster.thrust = parent
+        let target_thrust = parent
             .get(thruster.vessel)
             .map(|(trans, acc)| (trans.rotation.inverse() * acc.0 * thruster.scale).length())
-            .unwrap_or_default()
-            / 10.0;
+            .unwrap_or_default();
+
+        thruster.thrust +=
+            (target_thrust - thruster.thrust) * time.delta_seconds().powf(THRUST_ADJUST_SPEED);
     }
 }
 
@@ -94,10 +102,8 @@ fn animate_thruster_system(
             time.delta_seconds() * 300.0 % THRUST_WIGGLE_MULTIPLIER
                 - THRUST_WIGGLE_MULTIPLIER / 2.0,
         );
-        let current_length = (transform.scale * thrust.scale).length();
-        transform.scale += (current_length - thrust.thrust)
-            * time.delta_seconds()
-            * thrust.scale
-            * THRUST_ADJUST_SPEED;
+
+        transform.scale = thrust.initial_scale + (thrust.initial_scale * thrust.scale)
+            - thrust.initial_scale * thrust.scale * thrust.thrust * THRUST_SCALE_MULTIPLIER;
     }
 }
