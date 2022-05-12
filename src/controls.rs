@@ -1,4 +1,4 @@
-use bevy::{app::ManualEventReader, input::mouse::MouseMotion, prelude::*};
+use bevy::{ecs::event::ManualEventReader, input::mouse::MouseMotion, prelude::*};
 
 use crate::{
     impulse::{AngularImpulse, Impulse},
