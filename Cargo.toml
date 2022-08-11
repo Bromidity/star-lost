@@ -18,7 +18,8 @@ features = [
     "render", 
     "bevy_winit", 
     "dynamic",
-    "x11"
+    "x11",
+    "png"
 ]
 
 [dependencies.bevy_kira_audio]
@@ -30,3 +31,8 @@ features = [
   "mp3",
   "ogg",
 ]
+
+[dependencies.bevy_hanabi]
+version = "0.3.0"
+default-features = false
+features = ["3d"]

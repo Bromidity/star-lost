@@ -2,6 +2,7 @@ use bevy::{pbr::AmbientLight, prelude::*};
 use bevy_kira_audio::AudioPlugin;
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
+use dust::DustPlugin;
 use impulse::ImpulsePlugin;
 use physics::PhysicsPlugin;
 use route::RoutePlugin;
@@ -10,6 +11,7 @@ use tracking::TrackingPlugin;
 
 mod controls;
 mod debug;
+mod dust;
 mod impulse;
 mod physics;
 mod route;
@@ -36,6 +38,7 @@ fn main() {
         .add_plugin(ControlsPlugin)
         .add_plugin(RoutePlugin)
         .add_plugin(ThrustPlugin)
+        .add_plugin(DustPlugin)
         .add_system(ui::follow_object_system)
         .add_startup_system(setup)
         .run();
