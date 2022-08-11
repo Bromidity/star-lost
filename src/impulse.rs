@@ -49,6 +49,8 @@ pub struct ShipBundle {
     pub thrust_characteristics: ThrustCharacteristics,
     #[bundle]
     pub physics: PhysicsBundle,
+    #[bundle]
+    pub spatial: SpatialBundle,
 }
 
 pub struct ImpulsePlugin;

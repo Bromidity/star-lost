@@ -22,6 +22,9 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
                 },
                 physics: PhysicsBundle {
                     velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -5.0])),
+                    ..Default::default()
+                },
+                spatial: SpatialBundle {
                     transform: Transform::from_xyz(0.0, 5.0, 20.0),
                     ..Default::default()
                 },
@@ -47,7 +50,7 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
                 max: Vec3::from_slice(&[1.0, 1.0, 1.0]),
                 rot: Vec3::from_slice(&[100.0, 100.0, 100.0]),
             },
-            physics: PhysicsBundle {
+            spatial: SpatialBundle {
                 transform: Transform::from_xyz(50.0, -0.0, -0.0).with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
                     0.0,

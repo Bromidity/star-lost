@@ -58,8 +58,6 @@ impl Deref for AngularAcceleration {
 /// [Bundle](https://erasin.wang/books/bevy-cheatbook/programming/ec.html#component-bundles) containing common physics components.
 #[derive(Bundle, Default)]
 pub struct PhysicsBundle {
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
     pub drag: Drag,
     pub velocity: Velocity,
     pub acceleration: Acceleration,

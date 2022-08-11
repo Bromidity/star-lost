@@ -51,12 +51,12 @@ where
 
 fn quick_build(parent: &mut ChildBuilder, model: Handle<Scene>, offset: Vec3, rotation: u8) {
     parent
-        .spawn_bundle((
-            Transform::from_translation(offset).with_rotation(Quat::from_rotation_y(
+        .spawn_bundle(SpatialBundle {
+            transform: Transform::from_translation(offset).with_rotation(Quat::from_rotation_y(
                 std::f32::consts::FRAC_PI_2 * rotation as f32,
             )),
-            GlobalTransform::identity(),
-        ))
+            ..Default::default()
+        })
         .with_children(|segment| {
             segment.spawn_bundle(SceneBundle {
                 scene: model.clone(),
@@ -273,7 +273,7 @@ where
 
 #[derive(Bundle, Default)]
 pub struct StationBundle {
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
     pub angular_velocity: AngularVelocity,
+    #[bundle]
+    pub spatial: SpatialBundle,
 }

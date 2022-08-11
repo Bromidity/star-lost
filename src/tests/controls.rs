@@ -8,8 +8,11 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
     commands
         .spawn_bundle(ShipBundle {
             physics: PhysicsBundle {
-                transform: Transform::from_translation(Vec3::from_slice(&[35.0, 10.0, 35.0])),
                 drag: Drag(0.1),
+                ..Default::default()
+            },
+            spatial: SpatialBundle {
+                transform: Transform::from_translation(Vec3::from_slice(&[35.0, 10.0, 35.0])),
                 ..Default::default()
             },
             thrust_characteristics: ThrustCharacteristics {

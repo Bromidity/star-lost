@@ -28,6 +28,9 @@ pub fn spawn_route_ship(
                 },
                 physics: PhysicsBundle {
                     velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -1.0])),
+                    ..Default::default()
+                },
+                spatial: SpatialBundle {
                     transform: Transform::from_xyz(0.0, 5.0, 50.0),
                     ..Default::default()
                 },
@@ -59,7 +62,7 @@ pub fn spawn_route_ship(
                     max: Vec3::from_slice(&[0.1, 0.1, 1.0]),
                     rot: Vec3::from_slice(&[10.0, 10.0, 10.0]),
                 },
-                physics: PhysicsBundle {
+                spatial: SpatialBundle {
                     transform: Transform::from_xyz(
                         rng.gen_range(-50.0..50.0),
                         rng.gen_range(-50.0..50.0),
