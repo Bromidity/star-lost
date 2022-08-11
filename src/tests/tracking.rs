@@ -29,7 +29,10 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
             })
             .debug_vector::<Acceleration>(asset_server)
             .with_children(|parent| {
-                parent.spawn_scene(model.clone());
+                parent.spawn_bundle(SceneBundle {
+                    scene: model.clone(),
+                    ..Default::default()
+                });
                 parent.spawn_bundle((DebugVector::<Acceleration>::default(),));
             })
             .id()
@@ -56,7 +59,10 @@ pub fn spawn_tracking_ships(commands: &mut Commands, asset_server: &Res<AssetSer
             ..Default::default()
         })
         .with_children(|parent| {
-            parent.spawn_scene(model.clone());
+            parent.spawn_bundle(SceneBundle {
+                scene: model.clone(),
+                ..Default::default()
+            });
         })
         .debug_vector::<Acceleration>(asset_server)
         .debug_value::<Acceleration>("acceleration")

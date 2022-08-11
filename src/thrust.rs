@@ -41,7 +41,7 @@ fn tag_thrusters_for_animation_system(
             if acceleration.is_some() {
                 Some(entity)
             } else {
-                parent.and_then(|p| find_simulated_parent(parents, p.0))
+                parent.and_then(|p| find_simulated_parent(parents, p.get()))
             }
         } else {
             None
@@ -50,7 +50,7 @@ fn tag_thrusters_for_animation_system(
 
     for (thruster, transform, name, parent) in potential_thrusters.iter() {
         if name.as_str().contains("anim_thrust_z_neg") {
-            if let Some(ship) = find_simulated_parent(&parents, parent.0) {
+            if let Some(ship) = find_simulated_parent(&parents, parent.get()) {
                 debug!(
                     "inserting AnimatedThruster component for '{}' child of {:?}",
                     name.as_str(),

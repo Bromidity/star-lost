@@ -116,7 +116,7 @@ pub fn animate_ship_camera_effects(
     ship: Query<(&Transform, &Velocity, &AngularVelocity), Without<WorldCamera>>,
 ) {
     for (mut cam_trans, parent) in cameras.iter_mut() {
-        if let Ok((ship_trans, velocity, angular_velocity)) = ship.get(parent.0) {
+        if let Ok((ship_trans, velocity, angular_velocity)) = ship.get(parent.get()) {
             let translation_from_speed = {
                 let local_velocity = ship_trans.rotation.inverse() * velocity.0;
                 let vel = local_velocity.length();

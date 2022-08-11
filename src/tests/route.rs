@@ -35,7 +35,10 @@ pub fn spawn_route_ship(
             })
             //.debug_vector::<Acceleration>(asset_server)
             .with_children(|parent| {
-                parent.spawn_scene(model.clone());
+                parent.spawn_bundle(SceneBundle {
+                    scene: model.clone(),
+                    ..Default::default()
+                });
                 parent.spawn_bundle((DebugVector::<Acceleration>::default(),));
             })
             .id()
@@ -73,7 +76,10 @@ pub fn spawn_route_ship(
                 ..Default::default()
             })
             .with_children(|parent| {
-                parent.spawn_scene(model.clone());
+                parent.spawn_bundle(SceneBundle {
+                    scene: model.clone(),
+                    ..Default::default()
+                });
             })
             .insert(route)
             .insert(PointInDirectionOfAcceleration)

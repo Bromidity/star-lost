@@ -1,5 +1,5 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
-use std::{collections::HashMap, marker::PhantomData, ops::Deref};
+use std::{collections::HashMap, fmt::Write, marker::PhantomData, ops::Deref};
 
 use crate::ui::FollowObject;
 
@@ -61,7 +61,10 @@ impl AddDebugArrow for EntityCommands<'_, '_, '_> {
                     DebugVector::<T>::default(),
                 ))
                 .with_children(|arrow| {
-                    arrow.spawn_scene(asset_server.load("models/arrow.glb#Scene0"));
+                    arrow.spawn_bundle(SceneBundle {
+                        scene: asset_server.load("models/arrow.glb#Scene0"),
+                        ..Default::default()
+                    });
                 });
         })
     }
@@ -73,9 +76,9 @@ pub fn debug_vector_system<T: Component + Deref<Target = Vec3>>(
     value: Query<(&GlobalTransform, &T), Without<DebugVector<T>>>,
 ) {
     for (mut transform, parent) in query.iter_mut() {
-        if let Ok((global, debugged_value)) = value.get(parent.0) {
+        if let Ok((global, debugged_value)) = value.get(parent.get()) {
             transform.look_at(**debugged_value, Vec3::Y);
-            transform.rotation *= global.rotation.inverse();
+            transform.rotation *= global.to_scale_rotation_translation().1.inverse();
             transform.scale = Vec3::from_slice(&[1.0, debugged_value.length() * 4.0, 1.0]);
         }
     }
@@ -147,7 +150,7 @@ pub fn refresh_rendered_debug_window(mut query: Query<(&mut Text, &DebugWindow)>
     for (mut text, window) in query.iter_mut() {
         let mut block = String::new();
         for (k, v) in window.values.iter() {
-            block += &format!("{}: {}\n", k, v.as_str());
+            writeln!(block, "{}: {}", k, v.as_str()).ok();
         }
         text.sections[0].value = block;
     }
@@ -192,7 +195,7 @@ fn handle_debug_value_event(
                     style: Style {
                         align_self: AlignSelf::FlexEnd,
                         position_type: PositionType::Absolute,
-                        position: Rect {
+                        position: UiRect {
                             bottom: Val::Px(5.0),
                             left: Val::Px(15.0),
                             ..Default::default()
@@ -203,17 +206,17 @@ fn handle_debug_value_event(
                         },
                         ..Default::default()
                     },
-                    text: Text::with_section(
+                    text: Text::from_section(
                         "EMTPY DEBUG WINDOW".to_string(),
                         TextStyle {
                             font: font.clone(),
                             font_size: 12.0,
                             color: Color::WHITE,
                         },
-                        TextAlignment {
-                            ..Default::default()
-                        },
-                    ),
+                    )
+                    .with_alignment(TextAlignment {
+                        ..Default::default()
+                    }),
                     ..Default::default()
                 })
                 .insert(DebugWindow::showing_values_for(*entity))

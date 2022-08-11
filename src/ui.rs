@@ -15,8 +15,6 @@ pub struct FollowObject(pub Entity);
 /// to deduce how to translate between world and screen coordinates.
 /// Having multiple camera entities with the [WorldCamera] tag is not well defined.
 pub fn follow_object_system(
-    windows: Res<Windows>,
-    images: Res<Assets<Image>>,
     mut query: Query<(&mut Style, &CalculatedSize, &FollowObject)>,
     object_query: Query<&Transform>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldCamera>>,
@@ -24,8 +22,7 @@ pub fn follow_object_system(
     if let Some((camera, cam_trans)) = camera_query.iter().next() {
         for (mut style, size, follow) in query.iter_mut() {
             if let Ok(world_pos) = object_query.get(follow.0) {
-                if let Some(screen_pos) =
-                    camera.world_to_screen(&windows, &images, cam_trans, world_pos.translation)
+                if let Some(screen_pos) = camera.world_to_viewport(cam_trans, world_pos.translation)
                 {
                     style.position.left = Val::Px(screen_pos.x);
                     style.position.bottom = Val::Px(screen_pos.y - size.size.height);

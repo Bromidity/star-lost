@@ -10,9 +10,10 @@ log = "0.4.14"
 rand = { version = "0.8.4", features = ["std", "std_rng"] }
 
 [dependencies.bevy]
-version = "0.7.0"
+version = "0.8.0"
 default-features = false
 features = [
+    "bevy_scene",
     "bevy_gltf", 
     "render", 
     "bevy_winit", 
@@ -21,7 +22,7 @@ features = [
 ]
 
 [dependencies.bevy_kira_audio]
-version = "0.9.0"
+version = "0.11.0"
 default-features = false
 features = [
   "wav",

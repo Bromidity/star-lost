@@ -20,9 +20,12 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
             ..Default::default()
         })
         .with_children(|parent| {
-            parent.spawn_scene(model.clone());
+            parent.spawn_bundle(SceneBundle {
+                scene: model.clone(),
+                ..Default::default()
+            });
             parent
-                .spawn_bundle(PerspectiveCameraBundle {
+                .spawn_bundle(Camera3dBundle {
                     transform: Transform::from_xyz(0.0, 0.1, 0.6)
                         .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
                     ..Default::default()

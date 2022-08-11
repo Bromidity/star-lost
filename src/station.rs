@@ -58,7 +58,10 @@ fn quick_build(parent: &mut ChildBuilder, model: Handle<Scene>, offset: Vec3, ro
             GlobalTransform::identity(),
         ))
         .with_children(|segment| {
-            segment.spawn_scene(model);
+            segment.spawn_bundle(SceneBundle {
+                scene: model.clone(),
+                ..Default::default()
+            });
         });
 }
 
