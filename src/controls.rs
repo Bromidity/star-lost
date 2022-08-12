@@ -41,23 +41,24 @@ pub fn ship_translational_movement_system(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Impulse, &Transform), With<PlayerControlled>>,
 ) {
-    let window = windows.get_primary().unwrap();
-    if window.cursor_locked() {
-        for (mut impulse, transform) in query.iter_mut() {
-            let mut new_impulse = Vec3::ZERO;
-            for key in keys.get_pressed() {
-                new_impulse += match key {
-                    KeyCode::W => Vec3::from_slice(&[0.0, 1.0, 0.0]),
-                    KeyCode::A => Vec3::from_slice(&[-1.0, 0.0, 0.0]),
-                    KeyCode::S => Vec3::from_slice(&[0.0, -1.0, 0.0]),
-                    KeyCode::D => Vec3::from_slice(&[1.0, 0.0, 0.0]),
-                    KeyCode::LShift => Vec3::from_slice(&[0.0, 0.0, -5.0]),
-                    KeyCode::LControl => Vec3::from_slice(&[0.0, 0.0, 20.0]),
-                    _ => Vec3::ZERO,
-                };
-            }
+    if let Some(window) = windows.get_primary() {
+        if window.cursor_locked() {
+            for (mut impulse, transform) in query.iter_mut() {
+                let mut new_impulse = Vec3::ZERO;
+                for key in keys.get_pressed() {
+                    new_impulse += match key {
+                        KeyCode::W => Vec3::from_slice(&[0.0, 1.0, 0.0]),
+                        KeyCode::A => Vec3::from_slice(&[-1.0, 0.0, 0.0]),
+                        KeyCode::S => Vec3::from_slice(&[0.0, -1.0, 0.0]),
+                        KeyCode::D => Vec3::from_slice(&[1.0, 0.0, 0.0]),
+                        KeyCode::LShift => Vec3::from_slice(&[0.0, 0.0, -5.0]),
+                        KeyCode::LControl => Vec3::from_slice(&[0.0, 0.0, 20.0]),
+                        _ => Vec3::ZERO,
+                    };
+                }
 
-            *impulse = Impulse(transform.rotation * new_impulse * 10.0);
+                *impulse = Impulse(transform.rotation * new_impulse * 10.0);
+            }
         }
     }
 }
@@ -68,45 +69,45 @@ pub fn ship_rotational_movement_system(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut AngularImpulse, &Transform), With<PlayerControlled>>,
 ) {
-    let window = windows.get_primary().unwrap();
+    if let Some(window) = windows.get_primary() {
+        for (mut impulse, transform) in query.iter_mut() {
+            if window.cursor_locked() {
+                if let Some(pos) = window.physical_cursor_position() {
+                    let pos = pos.as_vec2();
 
-    for (mut impulse, transform) in query.iter_mut() {
-        if window.cursor_locked() {
-            if let Some(pos) = window.physical_cursor_position() {
-                let pos = pos.as_vec2();
+                    // Translate position into (-0.5, 0.5) space
+                    let relative_pos = pos
+                        / Vec2::from_slice(&[window.width() as f32, window.height() as f32])
+                        - Vec2::from_slice(&[0.5, 0.5]);
 
-                // Translate position into (-0.5, 0.5) space
-                let relative_pos = pos
-                    / Vec2::from_slice(&[window.width() as f32, window.height() as f32])
-                    - Vec2::from_slice(&[0.5, 0.5]);
+                    let mut imp = Vec3::from_slice(&[
+                        if relative_pos.y.abs() > 0.1 {
+                            relative_pos.y
+                        } else {
+                            0.0
+                        },
+                        -if relative_pos.x.abs() > 0.1 {
+                            relative_pos.x
+                        } else {
+                            0.0
+                        },
+                        0.0,
+                    ]);
 
-                let mut imp = Vec3::from_slice(&[
-                    if relative_pos.y.abs() > 0.1 {
-                        relative_pos.y
-                    } else {
-                        0.0
-                    },
-                    -if relative_pos.x.abs() > 0.1 {
-                        relative_pos.x
-                    } else {
-                        0.0
-                    },
-                    0.0,
-                ]);
+                    for key in keys.get_pressed() {
+                        imp += match key {
+                            KeyCode::Q => Vec3::from_slice(&[0.0, 0.0, 1.0]),
+                            KeyCode::E => Vec3::from_slice(&[0.0, 0.0, -1.0]),
+                            _ => Vec3::ZERO,
+                        };
+                    }
 
-                for key in keys.get_pressed() {
-                    imp += match key {
-                        KeyCode::Q => Vec3::from_slice(&[0.0, 0.0, 1.0]),
-                        KeyCode::E => Vec3::from_slice(&[0.0, 0.0, -1.0]),
-                        _ => Vec3::ZERO,
-                    };
+                    // Translate the impulse into world space
+                    *impulse = AngularImpulse(transform.rotation * imp);
                 }
-
-                // Translate the impulse into world space
-                *impulse = AngularImpulse(transform.rotation * imp);
+            } else {
+                *impulse = AngularImpulse::default();
             }
-        } else {
-            *impulse = AngularImpulse::default();
         }
     }
 }
