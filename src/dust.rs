@@ -4,8 +4,8 @@ use bevy::{
     prelude::{AssetServer, Assets, Commands, Handle, Image, Plugin, Res, ResMut, Transform},
 };
 use bevy_hanabi::{
-    ColorOverLifetimeModifier, EffectAsset, Gradient, HanabiPlugin, ParticleEffect,
-    ParticleEffectBundle, ParticleLifetimeModifier, ParticleTextureModifier,
+    BillboardModifier, ColorOverLifetimeModifier, EffectAsset, Gradient, HanabiPlugin,
+    ParticleEffect, ParticleEffectBundle, ParticleLifetimeModifier, ParticleTextureModifier,
     PositionSphereModifier, ShapeDimension, SizeOverLifetimeModifier, Spawner, Value,
 };
 
@@ -26,12 +26,14 @@ fn create_space_dust(
     let particle_texture: Handle<Image> = asset_server.load("images/cloud.png");
 
     let mut color_gradient = Gradient::new();
-    color_gradient.add_key(0.0, Vec4::new(1.0, 0.0, 1.0, 1.0));
-    color_gradient.add_key(1.0, Vec4::new(0.0, 0.0, 1.0, 0.0));
+    color_gradient.add_key(0.0, Vec4::new(1.0, 1.0, 1.0, 0.0));
+    color_gradient.add_key(0.05, Vec4::new(1.0, 1.0, 1.0, 1.0));
+    color_gradient.add_key(0.95, Vec4::new(1.0, 1.0, 1.0, 1.0));
+    color_gradient.add_key(1.0, Vec4::new(1.0, 1.0, 1.0, 0.0));
 
     let mut size_gradient = Gradient::new();
     size_gradient.add_key(0.0, Vec2::new(0.0, 0.0));
-    size_gradient.add_key(0.05, Vec2::new(0.08, 0.08));
+    size_gradient.add_key(0.05, Vec2::new(0.01, 0.01));
     size_gradient.add_key(0.5, Vec2::new(0.1, 0.1));
     size_gradient.add_key(1.0, Vec2::new(0.0, 0.0));
 
@@ -44,7 +46,7 @@ fn create_space_dust(
         }
         .init(PositionSphereModifier {
             center: Vec3::ZERO,
-            radius: 1.,
+            radius: 50.,
             dimension: ShapeDimension::Volume,
             speed: 0.0.into(),
         })
@@ -55,6 +57,7 @@ fn create_space_dust(
         .render(SizeOverLifetimeModifier {
             gradient: size_gradient,
         })
+        .render(BillboardModifier {})
         .render(ParticleTextureModifier {
             texture: particle_texture,
         }),
@@ -67,16 +70,6 @@ fn create_space_dust(
             effect: ParticleEffect::new(effect.clone()),
             transform: Transform::from_translation(Vec3::new(35.0, 11.0, 35.0))
                 .looking_at(Vec3::new(35.0, 8.0, 35.0), Vec3::Y),
-            ..Default::default()
-        });
-
-    commands
-        .spawn()
-        .insert(Name::new("emit:random2"))
-        .insert_bundle(ParticleEffectBundle {
-            effect: ParticleEffect::new(effect),
-            transform: Transform::from_translation(Vec3::new(35.0, 9.0, 35.0))
-                .looking_at(Vec3::new(33.0, 9.0, 35.0), Vec3::Y),
             ..Default::default()
         });
 }
