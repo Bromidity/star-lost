@@ -60,7 +60,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     tests::route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
 
     tests::controls::spawn_player_ship(&mut commands, asset_server);
-    //commands.spawn_bundle(UiCameraBundle::default());
 
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
