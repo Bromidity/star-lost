@@ -1,7 +1,7 @@
 use bevy::{
     core::Name,
     math::{Vec2, Vec3, Vec4},
-    prelude::{AssetServer, Assets, Commands, Handle, Image, Plugin, Res, ResMut, Transform},
+    prelude::*,
 };
 use bevy_hanabi::{
     BillboardModifier, ColorOverLifetimeModifier, EffectAsset, Gradient, HanabiPlugin,
@@ -9,14 +9,20 @@ use bevy_hanabi::{
     PositionSphereModifier, ShapeDimension, SizeOverLifetimeModifier, Spawner, Value,
 };
 
+use crate::controls::PlayerControlled;
+
 pub struct DustPlugin;
 
 impl Plugin for DustPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(HanabiPlugin)
-            .add_startup_system(create_space_dust);
+            .add_startup_system(create_space_dust)
+            .add_system(parent_dust_emitter_to_camera);
     }
 }
+
+#[derive(Component)]
+struct DustEmitter;
 
 fn create_space_dust(
     mut commands: Commands,
@@ -33,24 +39,23 @@ fn create_space_dust(
 
     let mut size_gradient = Gradient::new();
     size_gradient.add_key(0.0, Vec2::new(0.0, 0.0));
-    size_gradient.add_key(0.05, Vec2::new(0.01, 0.01));
-    size_gradient.add_key(0.5, Vec2::new(0.1, 0.1));
+    size_gradient.add_key(0.3, Vec2::new(0.03, 0.03));
     size_gradient.add_key(1.0, Vec2::new(0.0, 0.0));
 
     let effect = effects.add(
         EffectAsset {
             name: "space_dust".to_string(),
             capacity: 65536,
-            spawner: Spawner::rate(Value::Uniform((500., 1000.))),
+            spawner: Spawner::rate(Value::Uniform((1500., 2000.))),
             ..Default::default()
         }
         .init(PositionSphereModifier {
             center: Vec3::ZERO,
-            radius: 50.,
+            radius: 20.,
             dimension: ShapeDimension::Volume,
             speed: 0.0.into(),
         })
-        .init(ParticleLifetimeModifier { lifetime: 60.0 })
+        .init(ParticleLifetimeModifier { lifetime: 10.0 })
         .render(ColorOverLifetimeModifier {
             gradient: color_gradient,
         })
@@ -65,11 +70,25 @@ fn create_space_dust(
 
     commands
         .spawn()
-        .insert(Name::new("emit:random1"))
+        .insert(Name::new("emit:dust"))
+        .insert(DustEmitter)
         .insert_bundle(ParticleEffectBundle {
             effect: ParticleEffect::new(effect.clone()),
-            transform: Transform::from_translation(Vec3::new(35.0, 11.0, 35.0))
-                .looking_at(Vec3::new(35.0, 8.0, 35.0), Vec3::Y),
             ..Default::default()
         });
+}
+
+/// Parents the dust emitter to the [`PlayerControlled`] entity (generally a ship).
+/// This is because the dust emitter startup system can run before or after the
+/// main setup phase of the game.
+fn parent_dust_emitter_to_camera(
+    mut commands: Commands,
+    emitter: Query<Entity, (With<DustEmitter>, Without<Parent>)>,
+    camera_query: Query<Entity, With<PlayerControlled>>,
+) {
+    for camera_entity in camera_query.iter() {
+        for emitter_entity in emitter.iter() {
+            commands.entity(camera_entity).add_child(emitter_entity);
+        }
+    }
 }

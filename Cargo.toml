@@ -23,7 +23,7 @@ features = [
 ]
 
 [dependencies.bevy_kira_audio]
-version = "0.11.0"
+version = "0.12.0"
 default-features = false
 features = [
   "wav",
@@ -33,7 +33,6 @@ features = [
 ]
 
 [dependencies.bevy_hanabi]
-git = "https://github.com/MathiasPius/bevy_hanabi"
-branch = "directional-sprite"
+version = "0.3.1"
 default-features = false
 features = ["3d"]

@@ -376,8 +376,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_hanabi"
-version = "0.3.0"
-source = "git+https://github.com/MathiasPius/bevy_hanabi?branch=directional-sprite#649609cc6d5936565fff8c03c9efb2d3b6a5d36e"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "371c5bd9edcf42721cd4e769354c221f3c4090e7a1dba0eb0bd6ca29e7828142"
 dependencies = [
  "anyhow",
  "bevy",
@@ -452,14 +453,15 @@ dependencies = [
 
 [[package]]
 name = "bevy_kira_audio"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7d902ab6a15bd45af04d47b208a24f95205d8d2fd1fa15dd4e86a570fad813b"
+checksum = "0379febb94c497ac6f6b5c0ef27775f7302f65dc780a33dbcec0c743a474b5f4"
 dependencies = [
  "anyhow",
  "bevy",
  "kira",
  "parking_lot 0.12.1",
+ "thiserror",
 ]
 
 [[package]]
