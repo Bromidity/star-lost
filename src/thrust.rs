@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioControl, AudioInstance, AudioTween};
 
 use crate::physics::Acceleration;
 
@@ -14,6 +15,7 @@ pub struct AnimatedThruster {
     pub initial_scale: Vec3,
     pub scale: Vec3,
     pub thrust: f32,
+    pub sound: Handle<AudioInstance>,
 }
 
 pub struct ThrustPlugin;
@@ -32,6 +34,8 @@ fn tag_thrusters_for_animation_system(
     mut commands: Commands,
     potential_thrusters: Query<(Entity, &Transform, &Name, &Parent), Added<Name>>,
     parents: Query<(Option<&Parent>, Option<&Acceleration>)>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     fn find_simulated_parent(
         parents: &Query<(Option<&Parent>, Option<&Acceleration>)>,
@@ -56,11 +60,19 @@ fn tag_thrusters_for_animation_system(
                     name.as_str(),
                     ship
                 );
+
+                let sound = audio
+                    .play(asset_server.load("audio/sci-fi-sounds/thrusterFire_002.ogg"))
+                    .with_volume(0.0)
+                    .looped()
+                    .handle();
+
                 commands.entity(thruster).insert(AnimatedThruster {
                     vessel: ship,
                     initial_scale: transform.scale,
                     scale: -Vec3::Z,
                     thrust: 0.0,
+                    sound,
                 });
             } else {
                 warn!("found 'anim_thrust_z_neg' component with no simulated parent");
@@ -72,6 +84,7 @@ fn tag_thrusters_for_animation_system(
 /// Sets a thruster's "Thrust" based on the acceleration of its parent
 fn update_thrust_from_acceleration_system(
     time: Res<Time>,
+    mut audio: ResMut<Assets<AudioInstance>>,
     mut thrusters: Query<&mut AnimatedThruster>,
     parent: Query<(&Transform, &Acceleration)>,
 ) {
@@ -83,6 +96,13 @@ fn update_thrust_from_acceleration_system(
 
         thruster.thrust +=
             (target_thrust - thruster.thrust) * time.delta_seconds().powf(THRUST_ADJUST_SPEED);
+
+        if let Some(sound) = audio.get_mut(&thruster.sound) {
+            sound.set_volume(
+                (thruster.thrust / 20.0) as f64,
+                AudioTween::linear(std::time::Duration::from_millis(10)),
+            );
+        }
     }
 }
 
