@@ -44,7 +44,12 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     let a = tests::station::spawn_station(
         &mut commands,
         &asset_server,
@@ -57,19 +62,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         -Vec3::from_slice(&[30.0, 10.0, 30.0]),
         0.3,
     );
+
+    tests::planet::spawn_planet(
+        &mut commands,
+        &asset_server,
+        &mut meshes,
+        &mut materials,
+        0.1,
+    );
+    tests::planet::spawn_sun(&mut commands, &mut meshes, &mut materials, 0.1);
+
     tests::route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
 
     tests::controls::spawn_player_ship(&mut commands, asset_server);
-
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            color: Color::WHITE,
-            intensity: 50000.0,
-            range: 1000.0,
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(3.0, 40.0, 30.0),
-        ..Default::default()
-    });
 }

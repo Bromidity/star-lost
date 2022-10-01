@@ -50,7 +50,7 @@ pub fn spawn_route_ship(
     waypoints.push(id.into());
     let mut rng = rand::thread_rng();
 
-    for i in 0..10 {
+    for i in 0..100 {
         let mut route = Route::from(waypoints.clone());
         route.set_waypoint(i);
 
