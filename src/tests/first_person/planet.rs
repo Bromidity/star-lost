@@ -60,8 +60,6 @@ pub fn spawn_sun(
         ..default()
     };
 
-    println!("{:#?}", material);
-
     let material = materials.add(material);
 
     // Just rotate the station a bit, so its rotation axis is

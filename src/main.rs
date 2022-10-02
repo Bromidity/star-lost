@@ -2,9 +2,10 @@ use bevy::{pbr::AmbientLight, prelude::*};
 use bevy_kira_audio::AudioPlugin;
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
-use dust::DustPlugin;
+//use dust::DustPlugin;
 use impulse::ImpulsePlugin;
-use physics::PhysicsPlugin;
+use orbit::{Orbit, OrbitPlugin};
+use physics::{AngularVelocity, PhysicsPlugin};
 use route::RoutePlugin;
 use thrust::ThrustPlugin;
 use tracking::TrackingPlugin;
@@ -13,6 +14,7 @@ mod controls;
 mod debug;
 mod dust;
 mod impulse;
+mod orbit;
 mod physics;
 mod route;
 mod station;
@@ -38,7 +40,8 @@ fn main() {
         .add_plugin(ControlsPlugin)
         .add_plugin(RoutePlugin)
         .add_plugin(ThrustPlugin)
-        .add_plugin(DustPlugin)
+        .add_plugin(OrbitPlugin)
+        //.add_plugin(DustPlugin)
         .add_system(ui::follow_object_system)
         .add_startup_system(setup)
         .run();
@@ -50,29 +53,58 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let a = tests::station::spawn_station(
-        &mut commands,
-        &asset_server,
-        Vec3::from_slice(&[30.0, 10.0, 30.0]),
-        -0.1,
-    );
-    let b = tests::station::spawn_station(
-        &mut commands,
-        &asset_server,
-        -Vec3::from_slice(&[30.0, 10.0, 30.0]),
-        0.3,
-    );
+    commands.spawn_bundle(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 1.0, 1.0).looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
+        ..Default::default()
+    });
 
-    tests::planet::spawn_planet(
-        &mut commands,
-        &asset_server,
-        &mut meshes,
-        &mut materials,
-        0.1,
-    );
-    tests::planet::spawn_sun(&mut commands, &mut meshes, &mut materials, 0.1);
+    let material = materials.add(StandardMaterial {
+        base_color: Color::WHITE,
+        reflectance: 0.0,
+        emissive: Color::WHITE,
+        ..default()
+    });
 
-    tests::route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
+    let rot = Quat::from_rotation_x(-0.5);
 
-    tests::controls::spawn_player_ship(&mut commands, asset_server);
+    // commands.spawn_bundle(PointLightBundle {
+    //     point_light: PointLight {
+    //         color: Color::WHITE,
+    //         intensity: 50000.0,
+    //         range: 1000.0,
+    //         shadows_enabled: true,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform::from_xyz(200.0, 4000.0, 3000.0),
+    //     ..Default::default()
+    // });
+
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius: 0.1,
+                subdivisions: 32,
+            })),
+            material: material.clone(),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        })
+        .insert(AngularVelocity(
+            rot.mul_vec3(Vec3::from_slice(&[0.0, -0.5, 0.0])),
+        ));
+
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius: 0.03,
+                subdivisions: 32,
+            })),
+            material,
+            transform: Transform::from_xyz(1.0, 0.0, 0.0),
+            ..default()
+        })
+        .insert(Orbit {
+            position: Vec3::ZERO,
+            offset: 0.0,
+        });
 }
