@@ -16,14 +16,13 @@ pub struct Orbit {
 }
 
 /// Orbits an entity around its [`Orbiting`] entity.
-pub fn orbit_system(
-    time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut Orbit)>,
-) {
-    for (mut transform, mut orbit) in query.iter_mut() {
-        orbit.offset += time.delta_seconds() * 0.0001;
-
+pub fn orbit_system(time: Res<Time>, mut query: Query<(&mut Transform, &Orbit)>) {
+    for (mut transform, orbit) in query.iter_mut() {
         //transform.translation = offset_transform.translation
-        transform.rotate_around(orbit.position, Quat::from_rotation_y(orbit.offset));
+        let rotation = Quat::from_rotation_y(time.delta_seconds() * 0.1);
+        transform.rotate_around(orbit.position, rotation);
+
+        // Apply the inverse rotation locally to cancel incidental "tidal locking"
+        transform.rotate_local_y(-time.delta_seconds() * 0.1);
     }
 }
