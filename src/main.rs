@@ -3,12 +3,13 @@ use bevy_egui::{
     egui::{self, Label},
     EguiContext, EguiPlugin,
 };
+use bevy_inspector_egui::WorldInspectorPlugin;
 use iyes_loopless::prelude::*;
+use planets::SystemPlugin;
 
 use bevy_kira_audio::AudioPlugin;
 use controls::ControlsPlugin;
 use debug::DebugPlugin;
-//use dust::DustPlugin;
 use impulse::ImpulsePlugin;
 use orbit::OrbitPlugin;
 use physics::PhysicsPlugin;
@@ -30,6 +31,7 @@ mod tests;
 mod thrust;
 mod tracking;
 
+mod planets;
 #[allow(dead_code)]
 mod ui;
 
@@ -44,6 +46,7 @@ enum GameState {
 
 fn main() {
     App::new()
+        .add_startup_system(enable_hot_reloading)
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0 / 5.0f32,
@@ -61,23 +64,25 @@ fn main() {
         .add_plugin(RoutePlugin)
         .add_plugin(ThrustPlugin)
         .add_plugin(OrbitPlugin)
-        //.add_plugin(DustPlugin)
         .add_loopless_state(GameState::Loading)
         .add_enter_system(GameState::Loading, load_assets)
-        //.add_system(ui::follow_object_system)
-        //.add_startup_system(setup)
         .add_system(main_menu.run_in_state(GameState::MainMenu))
         .add_system(esc_pause.run_in_state(GameState::Running))
+        .add_enter_system(GameState::Running, init_camera)
         .add_system(esc_pause.run_in_state(GameState::Paused))
         .add_system(pause_menu.run_in_state(GameState::Paused))
         .add_system(exit_system.run_in_state(GameState::Quit))
+        .add_plugin(SystemPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 
 fn load_assets(mut commands: Commands) {
-    println!("Hello world");
-
     commands.insert_resource(NextState(GameState::MainMenu));
+}
+
+fn enable_hot_reloading(asset_server: Res<AssetServer>) {
+    asset_server.watch_for_changes().unwrap()
 }
 
 fn exit_system(mut exit: EventWriter<AppExit>) {
@@ -150,69 +155,10 @@ fn esc_pause(
     }
 }
 
-/*
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn init_camera(mut commands: Commands) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 1.0, 1.0).looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
-        ..Default::default()
-    });
-
-    let material = materials.add(StandardMaterial {
-        //base_color: Color::BLACK,
-        //emissive: Color::rgb(0.1, 0.1, 0.2),
-        reflectance: 0.0,
-        metallic: 1.0,
-        base_color_texture: Some(asset_server.load("images/earth.png")),
-        normal_map_texture: Some(asset_server.load("images/2k_earth_normal_map.png")),
+        transform: Transform::from_xyz(0.0, 20.0, 20.0)
+            .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
         ..default()
     });
-
-    let rot = Quat::from_rotation_x(-0.5);
-
-    // commands.spawn_bundle(PointLightBundle {
-    //     point_light: PointLight {
-    //         color: Color::WHITE,
-    //         intensity: 50000.0,
-    //         range: 1000.0,
-    //         shadows_enabled: true,
-    //         ..Default::default()
-    //     },
-    //     transform: Transform::from_xyz(200.0, 4000.0, 3000.0),
-    //     ..Default::default()
-    // });
-
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius: 0.1,
-                subdivisions: 32,
-            })),
-            material: material.clone(),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        })
-        .insert(AngularVelocity(
-            rot.mul_vec3(Vec3::from_slice(&[0.0, -0.5, 0.0])),
-        ));
-
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius: 0.03,
-                subdivisions: 32,
-            })),
-            material,
-            transform: Transform::from_xyz(1.0, 0.0, 0.0),
-            ..default()
-        })
-        .insert(Orbit {
-            position: Vec3::ZERO,
-            offset: 0.0,
-        });
 }
- */

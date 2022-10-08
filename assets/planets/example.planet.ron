@@ -1,0 +1,9 @@
+PlanetPreset(
+    scale: 1.0,
+    color: Rgba(
+        red: 0.4,
+        green: 0.2,
+        blue: 0.8,
+        alpha: 1.0
+    )
+)

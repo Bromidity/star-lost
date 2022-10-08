@@ -1,0 +1,32 @@
+LocalSystem(
+    name: "Solar System",
+    position: Vec3(0.0, 0.0, 0.0),
+    center:
+        Body(
+            name: "Sun",
+            kind: Star,
+            size: 1.0,
+            bodies: [
+                (
+                    body: Body(
+                        name: "Mercury",
+                        kind: Planet,
+                        size: 0.5,
+                    ),
+                    distance: 5.0,
+                    offset: 1.0,
+                    inclination: 0.0,
+                ),
+                (
+                    body: Body(
+                        name: "Venus",
+                        kind: Planet,
+                        size: 0.7,
+                    ),
+                    distance: 3.0,
+                    offset: 2.0,
+                    inclination: 1.0,
+                )
+            ]
+        )
+)
