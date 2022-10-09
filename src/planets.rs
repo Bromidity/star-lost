@@ -1,13 +1,13 @@
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::{render_resource::{AsBindGroup, ShaderRef}, render_asset::RenderAsset},
 };
 use bevy_common_assets::ron::RonAssetPlugin;
 use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
-use crate::GameState;
+use crate::{physics::AngularVelocity, GameState};
 
 pub struct SystemPlugin;
 
@@ -42,7 +42,6 @@ pub struct OrbitingBody {
     pub body: Body,
     pub offset: f32,
     pub distance: f32,
-    pub inclination: f32,
 }
 
 #[derive(Debug, Deserialize, TypeUuid)]
@@ -189,18 +188,10 @@ fn spawn_body(
     let mut orbit = builder.spawn();
     orbit
         .insert_bundle(SpatialBundle {
-            transform,
+            //transform,
             ..default()
         })
         .insert(Name::new(format!("{}'s orbit", body.name)))
-        .with_children(|orbit| {
-            orbit.spawn().insert_bundle(MaterialMeshBundle {
-                mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-                material: orbital_material.clone(),
-                //transform: Transform::from_translation(-transform.translation),
-                ..default()
-            });
-        })
         .with_children(|planet| {
             planet
                 .spawn()
@@ -208,29 +199,41 @@ fn spawn_body(
                 .insert_bundle(PbrBundle {
                     mesh: preset.mesh.clone(),
                     material: preset.material.clone(),
-                    transform: Transform::from_scale(Vec3::splat(body.size)).with_translation(transform.translation),
+                    transform: Transform::from_scale(Vec3::splat(body.size))
+                        .with_translation(transform.translation),
                     ..default()
                 });
         });
 
     for child_body in body.bodies.iter() {
-        orbit.with_children(|child| {
-            let rotation = Quat::from_rotation_x(child_body.inclination)
-                * Quat::from_rotation_y(child_body.offset);
+        let rotation = Quat::from_rotation_y(child_body.offset);
 
-            let mut child_position =
-                Transform::from_translation(Vec3::new(child_body.distance, 0.0, 0.0));
-            child_position.rotate_around(Vec3::ZERO, rotation);
+        orbit
+            .with_children(|orbit| {
+                orbit.spawn().insert_bundle(MaterialMeshBundle {
+                    mesh: meshes.add(Mesh::from(shape::Plane {
+                        size: child_body.distance * 2.0,
+                    })),
+                    material: orbital_material.clone(),
+                    transform: Transform::from_rotation(rotation)
+                        .with_translation(transform.translation),
+                    ..default()
+                });
+            })
+            .with_children(|planet| {
+                let mut child_position =
+                    Transform::from_translation(Vec3::new(child_body.distance, 0.0, 0.0));
+                //child_position.rotate_around(Vec3::ZERO, rotation);
 
-            spawn_body(
-                child,
-                preset,
-                &child_body.body,
-                child_position,
-                orbital_material.clone(),
-                meshes,
-            )
-        });
+                spawn_body(
+                    planet,
+                    preset,
+                    &child_body.body,
+                    child_position,
+                    orbital_material.clone(),
+                    meshes,
+                )
+            });
     }
 }
 
