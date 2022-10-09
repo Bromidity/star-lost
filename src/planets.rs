@@ -1,13 +1,14 @@
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
-    render::{render_resource::{AsBindGroup, ShaderRef}, render_asset::RenderAsset},
+    render::render_resource::{AsBindGroup, ShaderRef},
 };
 use bevy_common_assets::ron::RonAssetPlugin;
+use bevy_mod_picking::PickableBundle;
 use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
-use crate::{physics::AngularVelocity, GameState};
+use crate::{orbit::OrbitBundle, GameState};
 
 pub struct SystemPlugin;
 
@@ -40,8 +41,7 @@ pub struct Body {
 #[derive(Debug, Deserialize)]
 pub struct OrbitingBody {
     pub body: Body,
-    pub offset: f32,
-    pub distance: f32,
+    pub period: f32,
 }
 
 #[derive(Debug, Deserialize, TypeUuid)]
@@ -120,6 +120,45 @@ fn generate_planet_meshes(
     }
 }
 
+struct SystemBuilder<'w, 's, 'a> {
+    commands: Commands<'w, 's>,
+    preset: PlanetPreset,
+    meshes: ResMut<'a, Assets<Mesh>>,
+}
+
+impl<'w, 's, 'a> SystemBuilder<'w, 's, 'a> {
+    pub fn system(&mut self, system: &LocalSystem) {
+        self.spawn_body(&system.center, None);
+    }
+
+    pub fn spawn_body(&mut self, body: &Body, parent: Option<(Entity, f32)>) {
+        let mut planet = self.commands.spawn();
+
+        planet
+            .insert(Name::new(body.name.clone()))
+            .insert_bundle(PbrBundle {
+                mesh: self.meshes.add(Mesh::from(shape::Icosphere {
+                    radius: body.size,
+                    subdivisions: 32,
+                })),
+                material: self.preset.material.clone(),
+                transform: Transform::from_scale(Vec3::splat(1.0)),
+                ..default()
+            })
+            .insert_bundle(PickableBundle::default());
+
+        if let Some((parent, distance)) = parent {
+            planet.insert_bundle(OrbitBundle::body(parent, distance));
+        }
+
+        let planet_id = planet.id();
+
+        for child in body.bodies.iter() {
+            self.spawn_body(&child.body, Some((planet_id, child.period)));
+        }
+    }
+}
+
 struct Universe {
     pub systems: Vec<Handle<LocalSystem>>,
 }
@@ -143,97 +182,25 @@ pub fn create_planet_presets(
 }
 
 fn spawn_system(
-    mut commands: Commands,
+    commands: Commands,
     presets: Res<PlanetPresets>,
     preset_assets: Res<Assets<PlanetPreset>>,
     universe: Res<Universe>,
     systems: Res<Assets<LocalSystem>>,
-    orbital_material: Res<Handle<OrbitalMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    meshes: ResMut<Assets<Mesh>>,
 ) {
+    let preset = preset_assets.get(&presets.example).unwrap().to_owned();
+
+    let mut system_builder = SystemBuilder {
+        commands,
+        preset,
+        meshes,
+    };
+
     for system in universe.systems.iter() {
         let system = systems.get(system).unwrap();
 
-        let preset = preset_assets.get(&presets.example).unwrap().to_owned();
-
-        commands
-            .spawn()
-            .insert_bundle(SpatialBundle::default())
-            .with_children(|child| {
-                child
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
-                    .with_children(|child| {
-                        spawn_body(
-                            child,
-                            &preset,
-                            &system.center,
-                            Transform::from_translation(Vec3::ZERO),
-                            (*orbital_material).clone(),
-                            &mut meshes,
-                        )
-                    });
-            });
-    }
-}
-
-fn spawn_body(
-    builder: &mut ChildBuilder,
-    preset: &PlanetPreset,
-    body: &Body,
-    transform: Transform,
-    orbital_material: Handle<OrbitalMaterial>,
-    meshes: &mut ResMut<Assets<Mesh>>,
-) {
-    let mut orbit = builder.spawn();
-    orbit
-        .insert_bundle(SpatialBundle {
-            //transform,
-            ..default()
-        })
-        .insert(Name::new(format!("{}'s orbit", body.name)))
-        .with_children(|planet| {
-            planet
-                .spawn()
-                .insert(Name::new(body.name.clone()))
-                .insert_bundle(PbrBundle {
-                    mesh: preset.mesh.clone(),
-                    material: preset.material.clone(),
-                    transform: Transform::from_scale(Vec3::splat(body.size))
-                        .with_translation(transform.translation),
-                    ..default()
-                });
-        });
-
-    for child_body in body.bodies.iter() {
-        let rotation = Quat::from_rotation_y(child_body.offset);
-
-        orbit
-            .with_children(|orbit| {
-                orbit.spawn().insert_bundle(MaterialMeshBundle {
-                    mesh: meshes.add(Mesh::from(shape::Plane {
-                        size: child_body.distance * 2.0,
-                    })),
-                    material: orbital_material.clone(),
-                    transform: Transform::from_rotation(rotation)
-                        .with_translation(transform.translation),
-                    ..default()
-                });
-            })
-            .with_children(|planet| {
-                let mut child_position =
-                    Transform::from_translation(Vec3::new(child_body.distance, 0.0, 0.0));
-                //child_position.rotate_around(Vec3::ZERO, rotation);
-
-                spawn_body(
-                    planet,
-                    preset,
-                    &child_body.body,
-                    child_position,
-                    orbital_material.clone(),
-                    meshes,
-                )
-            });
+        system_builder.system(system);
     }
 }
 

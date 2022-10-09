@@ -8,32 +8,14 @@ use iyes_loopless::prelude::*;
 use planets::SystemPlugin;
 
 use bevy_kira_audio::AudioPlugin;
-use controls::ControlsPlugin;
-use debug::DebugPlugin;
-use impulse::ImpulsePlugin;
 use orbit::OrbitPlugin;
-use physics::PhysicsPlugin;
-use route::RoutePlugin;
-use thrust::ThrustPlugin;
-use tracking::TrackingPlugin;
+
+mod orbit;
+
+mod tests;
 
 mod controls;
-mod debug;
-mod dust;
-mod impulse;
-mod orbit;
-mod physics;
-
-#[allow(dead_code)]
-mod route;
-mod station;
-mod tests;
-mod thrust;
-mod tracking;
-
 mod planets;
-#[allow(dead_code)]
-mod ui;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
@@ -47,6 +29,7 @@ enum GameState {
 fn main() {
     App::new()
         .add_startup_system(enable_hot_reloading)
+        .add_loopless_state(GameState::Loading)
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0 / 5.0f32,
@@ -55,25 +38,17 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(controls::ControlPlugin)
         .add_plugin(AudioPlugin)
-        .add_plugin(DebugPlugin)
-        .add_plugin(PhysicsPlugin)
-        .add_plugin(TrackingPlugin)
-        .add_plugin(ImpulsePlugin)
-        .add_plugin(ControlsPlugin)
-        .add_plugin(RoutePlugin)
-        .add_plugin(ThrustPlugin)
         .add_plugin(OrbitPlugin)
-        .add_loopless_state(GameState::Loading)
         .add_enter_system(GameState::Loading, load_assets)
         .add_system(main_menu.run_in_state(GameState::MainMenu))
         .add_system(esc_pause.run_in_state(GameState::Running))
-        .add_enter_system(GameState::Running, init_camera)
         .add_system(esc_pause.run_in_state(GameState::Paused))
         .add_system(pause_menu.run_in_state(GameState::Paused))
         .add_system(exit_system.run_in_state(GameState::Quit))
         .add_plugin(SystemPlugin)
-        .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
 
@@ -153,12 +128,4 @@ fn esc_pause(
             commands.insert_resource(NextState(GameState::Running))
         }
     }
-}
-
-fn init_camera(mut commands: Commands) {
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 20.0, 20.0)
-            .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
-        ..default()
-    });
 }

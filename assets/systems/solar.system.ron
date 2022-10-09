@@ -5,27 +5,87 @@ LocalSystem(
         Body(
             name: "Sun",
             kind: Star,
-            size: 1.0,
+            size: 0.695000,
             bodies: [
                 (
                     body: Body(
                         name: "Mercury",
                         kind: Planet,
-                        size: 1.0,
+                        size: 0.002435,
                     ),
-                    distance: 10.0,
-                    offset: 0.1,
+                    period: 0.241,
                 ),
-                /*(
+                (
                     body: Body(
                         name: "Venus",
                         kind: Planet,
-                        size: 0.7,
+                        size: 0.00605,
                     ),
-                    distance: 5.0,
-                    offset: 2.0,
-                    inclination: 1.0,
-                )*/
+                    period: 0.614,
+                ),
+                (
+                    body: Body(
+                        name: "Earth",
+                        kind: Planet,
+                        size: 0.006376146789,
+                        bodies: [
+                            (
+                                body: Body(
+                                    name: "Moon",
+                                    kind: Planet,
+                                    size: 0.00001
+                                ),
+                                period: 0.00274,
+                            )
+                        ]
+                    ),
+                    period: 1.0,
+                ),
+                (
+                    body: Body(
+                        name: "Mars",
+                        kind: Planet,
+                        size: 0.003335,
+                        bodies: []
+                    ),
+                    period: 1.88,
+                ),
+                (
+                    body: Body(
+                        name: "Jupiter",
+                        kind: Planet,
+                        size: 0.07188,
+                        bodies: []
+                    ),
+                    period: 11.86,
+                ),
+                (
+                    body: Body(
+                        name: "Saturn",
+                        kind: Planet,
+                        size: 0.06021,
+                        bodies: []
+                    ),
+                    period: 29.46,
+                ),
+                (
+                    body: Body(
+                        name: "Uranus",
+                        kind: Planet,
+                        size: 0.02565,
+                        bodies: []
+                    ),
+                    period: 84.0,
+                ),
+                (
+                    body: Body(
+                        name: "Neptune",
+                        kind: Planet,
+                        size: 0.02475,
+                        bodies: []
+                    ),
+                    period: 165.0,
+                )
             ]
         )
 )
