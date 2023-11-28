@@ -10,21 +10,21 @@ log = "0.4.17"
 rand = { version = "0.8.5", features = ["std", "std_rng"] }
 
 [dependencies.bevy]
-version = "0.8.1"
+version = "0.12.0"
 default-features = false
 features = [
-    "filesystem_watcher",
+    "file_watcher",
     "bevy_scene",
     "bevy_gltf", 
-    "render", 
-    "bevy_winit", 
-    "dynamic",
+    "bevy_render", 
+    "bevy_winit",
+    "dynamic_linking",
     "x11",
     "png"
 ]
 
 [dependencies.bevy_kira_audio]
-version = "0.12.0"
+version = "0.18.0"
 default-features = false
 features = [
   "wav",
@@ -34,31 +34,28 @@ features = [
 ]
 
 [dependencies.bevy_hanabi]
-version = "0.3.1"
+version = "0.8.0"
 default-features = false
 features = ["3d"]
 
 [dependencies.bevy_mod_picking]
-version = "0.9.0"
+version = "0.17.0"
 
 [dependencies.bevy_egui]
-version = "0.16.1"
+version = "0.23.0"
 
 [dependencies.bevy_common_assets]
 features = ["ron"]
-version = "0.3.0"
+version = "0.8.0"
 
 [dependencies.bevy_asset_loader]
-version = "0.12.1"
+version = "0.18.0"
 
 [dependencies.bevy-inspector-egui]
-version = "0.13.0"
-
-[dependencies.iyes_loopless]
-version = "0.7.1"
+version = "0.21.0"
 
 [dependencies.serde]
 version = "1.0"
 
 [dependencies.smooth-bevy-cameras]
-version = "0.5.0"
+version = "0.10.0"

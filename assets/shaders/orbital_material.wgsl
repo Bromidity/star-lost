@@ -13,9 +13,11 @@ fn fragment(
     let b = 0.5;
     let a = 0.5;
 
-    let val = (uv.x - a)*(uv.x - a) + (uv.y - b)*(uv.y - b);
-    let val1 = 1.0 - clamp((0.20 - val) * 10.0, 0.0, 1.0);
-    let val2 = 1.0 - clamp((val - 0.20) * 10.0, 0.0, 1.0);
-    let val3 = (val1 + val2 - 1.9) * 5.0;
-    return vec4(1.0, 1.0, val3 / 5.0, 1.0);
+    let x = (uv.x - a);
+    let y = (uv.y - b);
+
+    let circle = sqrt((x)*(x) + (y)*(y));
+    let ring_component = sin(circle * 100.0 - 200.0) - 0.95;
+    let distance_component = (x*x+y*y) / 5.0;
+    return vec4(1.0, 1.0, 1.0, clamp(ring_component - distance_component, 0.0, 0.005));
 }

@@ -1,28 +1,30 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+
+use crate::GameState;
 
 pub struct OrbitPlugin;
 
 impl Plugin for OrbitPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Orbit>()
-            .register_inspectable::<Orbit>()
             .register_type::<OrbitBody>()
-            .register_inspectable::<OrbitBody>()
-            .add_system(orbit_system)
-            .add_system(update_orbit_position.before(orbit_system));
+            .add_systems(GameState::Running, orbit_system)
+            .add_systems(
+                GameState::Running,
+                update_orbit_position.before(orbit_system),
+            );
     }
 }
 
 /// Defines the position which this entity is orbiting.
-#[derive(Default, Debug, Component, Reflect, Inspectable)]
+#[derive(Default, Debug, Component, Reflect)]
 #[reflect(Component)]
 pub struct Orbit {
     pub position: Vec3,
     pub period: f32,
 }
 
-#[derive(Debug, Component, Reflect, Inspectable)]
+#[derive(Debug, Component, Reflect)]
 pub struct OrbitBody(pub Entity);
 
 #[derive(Debug, Bundle)]
@@ -59,7 +61,7 @@ pub fn update_orbit_position(
 
 /// Orbits an entity around its [`Orbit`] parent entity.
 pub fn orbit_system(time: Res<Time>, mut query: Query<(&mut Transform, &Orbit)>) {
-    let position = (time.seconds_since_startup() as f32 + 100.0) * 6.2832;
+    let position = (time.elapsed_seconds() as f32 + 365000.0) * 6.2832 / 365.0;
 
     for (mut transform, orbit) in query.iter_mut() {
         // Approximation of orbital height based on orbital period.
@@ -70,6 +72,6 @@ pub fn orbit_system(time: Res<Time>, mut query: Query<(&mut Transform, &Orbit)>)
 
         transform.translation = orbit.position
             + Quat::from_rotation_y(position / orbit.period)
-                * Vec3::new(orbital_distance, 0.0, 0.0);
+                * Vec3::new(orbital_distance.log10() + 0.5, 0.0, 0.0);
     }
 }

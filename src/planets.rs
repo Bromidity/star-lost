@@ -5,7 +5,6 @@ use bevy::{
 };
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_mod_picking::PickableBundle;
-use iyes_loopless::prelude::AppLooplessStateExt;
 use serde::Deserialize;
 
 use crate::{orbit::OrbitBundle, GameState};
@@ -14,12 +13,12 @@ pub struct SystemPlugin;
 
 impl Plugin for SystemPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(RonAssetPlugin::<LocalSystem>::new(&["system.ron"]))
-            .add_plugin(RonAssetPlugin::<PlanetPreset>::new(&["planet.ron"]))
-            .add_plugin(MaterialPlugin::<OrbitalMaterial>::default())
-            .add_enter_system(GameState::Running, spawn_system)
-            .add_enter_system(GameState::Loading, create_planet_presets)
-            .add_system(generate_planet_meshes);
+        app.add_plugins(RonAssetPlugin::<LocalSystem>::new(&["system.ron"]))
+            .add_plugins(RonAssetPlugin::<PlanetPreset>::new(&["planet.ron"]))
+            .add_plugins(MaterialPlugin::<PlaneMaterial>::default())
+            .add_systems(GameState::Running, spawn_system)
+            .add_systems(OnEnter(GameState::Loading), create_planet_presets)
+            .add_systems(GameState::Running, generate_planet_meshes);
     }
 }
 
@@ -44,7 +43,7 @@ pub struct OrbitingBody {
     pub period: f32,
 }
 
-#[derive(Debug, Deserialize, TypeUuid)]
+#[derive(Debug, Deserialize, TypeUuid, Resource, TypePath, Asset)]
 #[uuid = "261dfb57-77a5-45ca-9a06-69b2ee640a3e"]
 pub struct LocalSystem {
     pub name: String,
@@ -52,7 +51,7 @@ pub struct LocalSystem {
     pub center: Body,
 }
 
-#[derive(Debug, Clone, Deserialize, TypeUuid)]
+#[derive(Debug, Clone, Deserialize, TypeUuid, Resource, Asset, TypePath)]
 #[uuid = "3efc2596-e948-40ff-a67d-e0786c9952e4"]
 pub struct PlanetPreset {
     pub color: Color,
@@ -65,6 +64,7 @@ pub struct PlanetPreset {
     pub loaded: bool,
 }
 
+#[derive(Resource)]
 struct PlanetPresets {
     pub example: Handle<PlanetPreset>,
 }
@@ -83,10 +83,11 @@ fn generate_planet_meshes(
             ..default()
         };
 
-        let sphere = Mesh::from(shape::Icosphere {
+        let sphere = Mesh::try_from(shape::Icosphere {
             radius: preset.scale,
             subdivisions: 32,
-        });
+        })
+        .unwrap();
 
         if let Some(mesh) = meshes.get_mut(&preset.mesh) {
             *mesh = sphere;
@@ -103,15 +104,15 @@ fn generate_planet_meshes(
         preset.loaded = true;
     };
 
-    for event in events.iter() {
+    for event in events.read() {
         match event {
-            AssetEvent::Created { handle } => {
-                let preset = presets.get_mut(handle).unwrap();
+            AssetEvent::Added { id } => {
+                let preset = presets.get_mut(*id).unwrap();
                 generate_preset(preset);
             }
-            AssetEvent::Modified { handle } => {
-                if let Some(PlanetPreset { loaded: false, .. }) = presets.get(handle) {
-                    let preset = presets.get_mut(handle).unwrap();
+            AssetEvent::Modified { id } => {
+                if let Some(PlanetPreset { loaded: false, .. }) = presets.get(*id) {
+                    let preset = presets.get_mut(*id).unwrap();
                     generate_preset(preset);
                 };
             }
@@ -124,6 +125,7 @@ struct SystemBuilder<'w, 's, 'a> {
     commands: Commands<'w, 's>,
     preset: PlanetPreset,
     meshes: ResMut<'a, Assets<Mesh>>,
+    orbital_material: Handle<PlaneMaterial>,
 }
 
 impl<'w, 's, 'a> SystemBuilder<'w, 's, 'a> {
@@ -132,23 +134,37 @@ impl<'w, 's, 'a> SystemBuilder<'w, 's, 'a> {
     }
 
     pub fn spawn_body(&mut self, body: &Body, parent: Option<(Entity, f32)>) {
-        let mut planet = self.commands.spawn();
-
-        planet
-            .insert(Name::new(body.name.clone()))
-            .insert_bundle(PbrBundle {
-                mesh: self.meshes.add(Mesh::from(shape::Icosphere {
-                    radius: body.size,
-                    subdivisions: 32,
-                })),
+        let mut planet = self.commands.spawn((
+            Name::new(body.name.clone()),
+            PbrBundle {
+                mesh: self.meshes.add(
+                    Mesh::try_from(shape::Icosphere {
+                        radius: body.size,
+                        subdivisions: 32,
+                    })
+                    .unwrap(),
+                ),
                 material: self.preset.material.clone(),
                 transform: Transform::from_scale(Vec3::splat(1.0)),
                 ..default()
-            })
-            .insert_bundle(PickableBundle::default());
+            },
+            PickableBundle::default(),
+        ));
+
+        // This is the ring-plane
+        planet.with_children(|child| {
+            child.spawn(MaterialMeshBundle {
+                mesh: self.meshes.add(Mesh::from(shape::Plane {
+                    size: body.size * 50.0,
+                    subdivisions: 0,
+                })),
+                material: self.orbital_material.clone(),
+                ..default()
+            });
+        });
 
         if let Some((parent, distance)) = parent {
-            planet.insert_bundle(OrbitBundle::body(parent, distance));
+            planet.insert(OrbitBundle::body(parent, distance));
         }
 
         let planet_id = planet.id();
@@ -159,6 +175,7 @@ impl<'w, 's, 'a> SystemBuilder<'w, 's, 'a> {
     }
 }
 
+#[derive(Resource)]
 struct Universe {
     pub systems: Vec<Handle<LocalSystem>>,
 }
@@ -166,7 +183,7 @@ struct Universe {
 pub fn create_planet_presets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut orbital_material: ResMut<Assets<OrbitalMaterial>>,
+    mut orbital_material: ResMut<Assets<PlaneMaterial>>,
 ) {
     commands.insert_resource(PlanetPresets {
         example: asset_server.load("planets/example.planet.ron"),
@@ -176,9 +193,9 @@ pub fn create_planet_presets(
         systems: vec![asset_server.load("systems/solar.system.ron")],
     });
 
-    commands.insert_resource(orbital_material.add(OrbitalMaterial {
+    commands.insert_resource(PlaneMaterialHandle(orbital_material.add(PlaneMaterial {
         color: Color::rgba(0.5, 0.1, 0.1, 0.2),
-    }));
+    })));
 }
 
 fn spawn_system(
@@ -188,6 +205,7 @@ fn spawn_system(
     universe: Res<Universe>,
     systems: Res<Assets<LocalSystem>>,
     meshes: ResMut<Assets<Mesh>>,
+    plane_material: Res<PlaneMaterialHandle>,
 ) {
     let preset = preset_assets.get(&presets.example).unwrap().to_owned();
 
@@ -195,6 +213,7 @@ fn spawn_system(
         commands,
         preset,
         meshes,
+        orbital_material: plane_material.0.clone(),
     };
 
     for system in universe.systems.iter() {
@@ -204,15 +223,18 @@ fn spawn_system(
     }
 }
 
+#[derive(Resource)]
+pub struct PlaneMaterialHandle(pub Handle<PlaneMaterial>);
+
 // This is the struct that will be passed to your shader
-#[derive(AsBindGroup, TypeUuid, Debug, Clone)]
+#[derive(AsBindGroup, TypeUuid, Debug, Clone, TypePath, Asset)]
 #[uuid = "2cdc9ddb-3ce2-4973-a844-5b3a9e8edc66"]
-pub struct OrbitalMaterial {
+pub struct PlaneMaterial {
     #[uniform(0)]
     color: Color,
 }
 
-impl Material for OrbitalMaterial {
+impl Material for PlaneMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/orbital_material.wgsl".into()
     }
