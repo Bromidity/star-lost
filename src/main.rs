@@ -6,7 +6,9 @@ use bevy_egui::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use bevy_kira_audio::AudioPlugin;
+use physics::PhysicsPlugin;
 
+mod physics;
 mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, States, Default, ScheduleLabel)]
@@ -32,6 +34,7 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(AudioPlugin)
+        .add_plugins(PhysicsPlugin)
         .add_systems(OnEnter(GameState::Loading), load_assets)
         .add_systems(Update, main_menu.run_if(in_state(GameState::MainMenu)))
         .add_systems(Update, esc_pause.run_if(in_state(GameState::Running)))
