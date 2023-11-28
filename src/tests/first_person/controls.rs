@@ -30,8 +30,7 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
             parent.spawn(Camera3dBundle {
                 tonemapping: Tonemapping::TonyMcMapface,
                 transform: Transform::from_xyz(0.0, 5.0, 0.0)
-                    .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y)
-                    ,
+                    .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
                 ..Default::default()
             });
         });

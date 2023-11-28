@@ -6,8 +6,12 @@ use bevy_egui::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use bevy_kira_audio::AudioPlugin;
+use controls::ControlsPlugin;
+use impulse::ImpulsePlugin;
 use physics::PhysicsPlugin;
+use thrust::ThrustPlugin;
 
+mod controls;
 mod impulse;
 mod physics;
 mod tests;
@@ -38,6 +42,9 @@ fn main() {
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(AudioPlugin)
         .add_plugins(PhysicsPlugin)
+        .add_plugins(ThrustPlugin)
+        .add_plugins(ControlsPlugin)
+        .add_plugins(ImpulsePlugin)
         .add_systems(OnEnter(GameState::Loading), load_assets)
         .add_systems(Update, main_menu.run_if(in_state(GameState::MainMenu)))
         .add_systems(Update, esc_pause.run_if(in_state(GameState::Running)))
