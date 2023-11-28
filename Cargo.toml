@@ -19,6 +19,7 @@ features = [
     "bevy_render", 
     "bevy_winit",
     "dynamic_linking",
+    "tonemapping_luts",
     "x11",
     "png"
 ]

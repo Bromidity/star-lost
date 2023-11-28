@@ -1,12 +1,12 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, core_pipeline::tonemapping::Tonemapping};
 
-use crate::{controls::PlayerControlled, impulse::*, physics::*, ui::WorldCamera};
+use crate::{impulse::*, physics::*};
 
 #[allow(dead_code)]
-pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
     let model = asset_server.load("models/ship_small_thrust.glb#Scene0");
     commands
-        .spawn_bundle(ShipBundle {
+        .spawn(ShipBundle {
             physics: PhysicsBundle {
                 drag: Drag(0.1),
                 ..Default::default()
@@ -23,17 +23,15 @@ pub fn spawn_player_ship(commands: &mut Commands, asset_server: Res<AssetServer>
             ..Default::default()
         })
         .with_children(|parent| {
-            parent.spawn_bundle(SceneBundle {
+            parent.spawn(SceneBundle {
                 scene: model.clone(),
                 ..Default::default()
             });
-            parent
-                .spawn_bundle(Camera3dBundle {
-                    transform: Transform::from_xyz(0.0, 0.1, 0.6)
-                        .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
-                    ..Default::default()
-                })
-                .insert(WorldCamera);
-        })
-        .insert(PlayerControlled);
+            parent.spawn(Camera3dBundle {
+                tonemapping: Tonemapping::TonyMcMapface,
+                transform: Transform::from_xyz(0.0, 10.0, 0.0)
+                    .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
+                ..Default::default()
+            });
+        });
 }

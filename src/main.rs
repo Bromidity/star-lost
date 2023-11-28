@@ -8,8 +8,11 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
 use physics::PhysicsPlugin;
 
+mod impulse;
 mod physics;
 mod tests;
+mod thrust;
+mod tracking;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, States, Default, ScheduleLabel)]
 enum GameState {
@@ -41,6 +44,13 @@ fn main() {
         .add_systems(Update, esc_pause.run_if(in_state(GameState::Paused)))
         .add_systems(Update, pause_menu.run_if(in_state(GameState::Paused)))
         .add_systems(OnEnter(GameState::Quit), exit_system)
+        .add_systems(
+            OnEnter(GameState::Running),
+            (
+                tests::first_person::controls::spawn_player_ship,
+                tests::first_person::tracking::spawn_tracking_ships,
+            ),
+        )
         .run();
 }
 

@@ -1,12 +1,11 @@
-use bevy::prelude::*;
+pub mod controls;
+// mod planet;
+// mod route;
+// mod station;
+// mod thrust;
+pub mod tracking;
 
-mod controls;
-mod planet;
-mod route;
-mod station;
-mod thrust;
-mod tracking;
-
+/*
 #[allow(dead_code)]
 fn setup(
     mut commands: Commands,
@@ -39,3 +38,4 @@ fn setup(
     route::spawn_route_ship(&mut commands, &asset_server, vec![a.into(), b.into()]);
     controls::spawn_player_ship(&mut commands, asset_server);
 }
+*/

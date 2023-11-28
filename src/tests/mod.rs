@@ -1,2 +1,2 @@
-//pub mod first_person;
-pub mod strategy;
+pub mod first_person;
+//pub mod strategy;

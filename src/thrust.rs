@@ -1,0 +1,129 @@
+use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioControl, AudioInstance, AudioTween};
+
+use crate::physics::Acceleration;
+
+/// This is the exponent with which the maximum thrust is approached.
+/// 0.5 means approach target thrust at the square root of the difference
+const THRUST_ADJUST_SPEED: f32 = 0.5;
+const THRUST_WIGGLE_MULTIPLIER: f32 = 0.01;
+const THRUST_SCALE_MULTIPLIER: f32 = 20.0;
+
+#[derive(Debug, Component)]
+pub struct AnimatedThruster {
+    pub vessel: Entity,
+    pub initial_scale: Vec3,
+    pub scale: Vec3,
+    pub thrust: f32,
+    pub sound: Handle<AudioInstance>,
+}
+
+pub struct ThrustPlugin;
+
+impl Plugin for ThrustPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(FixedUpdate, tag_thrusters_for_animation_system)
+            .add_systems(FixedUpdate, update_thrust_from_acceleration_system)
+            .add_systems(FixedUpdate, animate_thruster_system);
+    }
+}
+
+/// Listens for Added<Name> events where the object is called 'thrust_rear'
+/// and tags them for thrust animation.
+fn tag_thrusters_for_animation_system(
+    mut commands: Commands,
+    potential_thrusters: Query<(Entity, &Transform, &Name, &Parent), Added<Name>>,
+    parents: Query<(Option<&Parent>, Option<&Acceleration>)>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+) {
+    fn find_simulated_parent(
+        parents: &Query<(Option<&Parent>, Option<&Acceleration>)>,
+        entity: Entity,
+    ) -> Option<Entity> {
+        if let Ok((parent, acceleration)) = parents.get(entity) {
+            if acceleration.is_some() {
+                Some(entity)
+            } else {
+                parent.and_then(|p| find_simulated_parent(parents, p.get()))
+            }
+        } else {
+            None
+        }
+    }
+
+    for (thruster, transform, name, parent) in potential_thrusters.iter() {
+        if name.as_str().contains("anim_thrust_z_neg") {
+            if let Some(ship) = find_simulated_parent(&parents, parent.get()) {
+                debug!(
+                    "inserting AnimatedThruster component for '{}' child of {:?}",
+                    name.as_str(),
+                    ship
+                );
+
+                let sound = audio
+                    .play(asset_server.load("audio/sci-fi-sounds/thrusterFire_002.ogg"))
+                    .with_volume(0.0)
+                    .looped()
+                    .handle();
+
+                commands.entity(thruster).insert(AnimatedThruster {
+                    vessel: ship,
+                    initial_scale: transform.scale,
+                    scale: -Vec3::Z,
+                    thrust: 0.0,
+                    sound,
+                });
+            } else {
+                warn!("found 'anim_thrust_z_neg' component with no simulated parent");
+            }
+        }
+    }
+}
+
+/// Sets a thruster's "Thrust" based on the acceleration of its parent
+fn update_thrust_from_acceleration_system(
+    time: Res<Time>,
+    mut audio: ResMut<Assets<AudioInstance>>,
+    mut thrusters: Query<&mut AnimatedThruster>,
+    parent: Query<(&Transform, &Acceleration)>,
+) {
+    for mut thruster in thrusters.iter_mut() {
+        let target_thrust = parent
+            .get(thruster.vessel)
+            .map(|(trans, acc)| (trans.rotation.inverse() * acc.0 * thruster.scale).length())
+            .unwrap_or_default();
+
+        thruster.thrust +=
+            (target_thrust - thruster.thrust) * time.delta_seconds().powf(THRUST_ADJUST_SPEED);
+
+        if let Some(sound) = audio.get_mut(&thruster.sound) {
+            sound.set_volume(
+                (thruster.thrust / 20.0) as f64,
+                AudioTween::linear(std::time::Duration::from_millis(10)),
+            );
+        }
+    }
+}
+
+/// Animates thrusters
+fn animate_thruster_system(
+    time: Res<Time>,
+    mut thrusters: Query<(&mut Transform, &AnimatedThruster)>,
+) {
+    for (mut transform, thrust) in thrusters.iter_mut() {
+        // Do some funky wiggling to make it look cooler.
+        transform.rotation = Quat::from_euler(
+            EulerRot::XYZ,
+            time.delta_seconds() * 100.0 % THRUST_WIGGLE_MULTIPLIER
+                - THRUST_WIGGLE_MULTIPLIER / 2.0,
+            time.delta_seconds() * 200.0 % THRUST_WIGGLE_MULTIPLIER
+                - THRUST_WIGGLE_MULTIPLIER / 2.0,
+            time.delta_seconds() * 300.0 % THRUST_WIGGLE_MULTIPLIER
+                - THRUST_WIGGLE_MULTIPLIER / 2.0,
+        );
+
+        transform.scale = thrust.initial_scale + (thrust.initial_scale * thrust.scale)
+            - thrust.initial_scale * thrust.scale * thrust.thrust * THRUST_SCALE_MULTIPLIER;
+    }
+}
