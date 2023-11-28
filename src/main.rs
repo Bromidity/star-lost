@@ -9,6 +9,9 @@ use bevy_kira_audio::AudioPlugin;
 
 mod tests;
 
+mod firstperson;
+pub use firstperson::*;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, States, Default, ScheduleLabel)]
 enum GameState {
     #[default]

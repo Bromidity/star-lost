@@ -1,4 +1,5 @@
 use bevy::{prelude::*, render::camera::Camera};
+use bevy_egui::egui::Style;
 
 /// Marks an entity as *the* 3D World camera. This is used by the
 /// [follow_object_system](ui::follow_object_system) to translate
@@ -15,7 +16,7 @@ pub struct FollowObject(pub Entity);
 /// to deduce how to translate between world and screen coordinates.
 /// Having multiple camera entities with the [WorldCamera] tag is not well defined.
 pub fn follow_object_system(
-    mut query: Query<(&mut Style, &CalculatedSize, &FollowObject)>,
+    mut query: Query<(&mut Style, &FollowObject)>,
     object_query: Query<&Transform>,
     camera_query: Query<(&Camera, &GlobalTransform), With<WorldCamera>>,
 ) {
