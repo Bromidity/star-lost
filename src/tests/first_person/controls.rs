@@ -1,4 +1,4 @@
-use bevy::{prelude::*, core_pipeline::tonemapping::Tonemapping};
+use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 
 use crate::{impulse::*, physics::*};
 
@@ -12,7 +12,7 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
                 ..Default::default()
             },
             spatial: SpatialBundle {
-                transform: Transform::from_translation(Vec3::from_slice(&[35.0, 10.0, 35.0])),
+                transform: Transform::from_translation(Vec3::from_slice(&[0.0, -0.0, 0.0])),
                 ..Default::default()
             },
             thrust_characteristics: ThrustCharacteristics {
@@ -29,8 +29,9 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
             });
             parent.spawn(Camera3dBundle {
                 tonemapping: Tonemapping::TonyMcMapface,
-                transform: Transform::from_xyz(0.0, 10.0, 0.0)
-                    .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
+                transform: Transform::from_xyz(0.0, 5.0, 0.0)
+                    .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y)
+                    ,
                 ..Default::default()
             });
         });

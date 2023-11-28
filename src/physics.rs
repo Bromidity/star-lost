@@ -5,7 +5,7 @@ use bevy::prelude::*;
 //use crate::debug::{debug_vector_system, DebuggableValue};
 
 /// Translational velocity of the entity. Integrated by [velocity_system] into the entity [Transform]'s translational component.
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Reflect)]
 pub struct Velocity(pub Vec3);
 
 impl Deref for Velocity {
@@ -16,7 +16,7 @@ impl Deref for Velocity {
 }
 
 /// Angular velocity of the entity. Integrated by [angular_velocity_system] into the entity [Transform]'s rotational component.
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Reflect)]
 pub struct AngularVelocity(pub Vec3);
 
 impl Deref for AngularVelocity {
@@ -27,14 +27,14 @@ impl Deref for AngularVelocity {
 }
 
 /// The [drag_system] uses this component to dampen the [Velocity] and [AngularVelocity] components
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Reflect)]
 pub struct Drag(pub f32);
 
 /// Defines the *intended* acceleration of an entity. This is integrated into [Velocity] by [acceleration_system]
 /// Some systems directly overwrite this component's value.
 /// for example [Impulse](crate::ship::Impulse) or [AngularImpulse](crate::ship::AngularImpulse) on the ship.
 /// This is the primary way in which player controls & target tracking works.
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Reflect)]
 pub struct Acceleration(pub Vec3);
 
 impl Deref for Acceleration {
@@ -45,7 +45,7 @@ impl Deref for Acceleration {
 }
 
 /// Angular acceleration of the entity. Integrated by [angular_acceleration_system] into the entity's [AngularVelocity] component.
-#[derive(Debug, Default, Component)]
+#[derive(Debug, Default, Component, Reflect)]
 pub struct AngularAcceleration(pub Vec3);
 
 impl Deref for AngularAcceleration {
@@ -75,7 +75,12 @@ impl Plugin for PhysicsPlugin {
             .add_systems(FixedUpdate, acceleration_system)
             .add_systems(FixedUpdate, velocity_system)
             .add_systems(FixedUpdate, angular_velocity_system)
-            .add_systems(FixedUpdate, angular_acceleration_system);
+            .add_systems(FixedUpdate, angular_acceleration_system)
+            .register_type::<Drag>()
+            .register_type::<Velocity>()
+            .register_type::<Acceleration>()
+            .register_type::<AngularVelocity>()
+            .register_type::<AngularAcceleration>();
         // .add_plugin(DebuggableValue::<Transform>::default())
         // .add_plugin(DebuggableValue::<Velocity>::default())
         // .add_plugin(DebuggableValue::<Acceleration>::default())

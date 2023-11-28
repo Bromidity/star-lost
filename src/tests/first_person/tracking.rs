@@ -44,7 +44,7 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
                 rot: Vec3::from_slice(&[100.0, 100.0, 100.0]),
             },
             spatial: SpatialBundle {
-                transform: Transform::from_xyz(50.0, -0.0, -0.0).with_rotation(Quat::from_euler(
+                transform: Transform::from_xyz(20.0, -0.0, -0.0).with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
                     0.0,
                     1.0,
