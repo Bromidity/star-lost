@@ -4,17 +4,10 @@ use bevy_egui::{
     EguiContexts, EguiPlugin,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use planets::SystemPlugin;
 
 use bevy_kira_audio::AudioPlugin;
-use orbit::OrbitPlugin;
-
-mod orbit;
 
 mod tests;
-
-mod controls;
-mod planets;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, States, Default, ScheduleLabel)]
 enum GameState {
@@ -38,16 +31,13 @@ fn main() {
         .add_state::<GameState>()
         .add_plugins(EguiPlugin)
         .add_plugins(WorldInspectorPlugin::new())
-        .add_plugins(controls::ControlPlugin)
         .add_plugins(AudioPlugin)
-        .add_plugins(OrbitPlugin)
         .add_systems(OnEnter(GameState::Loading), load_assets)
         .add_systems(GameState::MainMenu, main_menu)
         .add_systems(GameState::Running, esc_pause)
         .add_systems(GameState::Paused, esc_pause)
         .add_systems(GameState::Paused, pause_menu)
         .add_systems(GameState::Quit, exit_system)
-        .add_plugins(SystemPlugin)
         .run();
 }
 
