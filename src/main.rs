@@ -9,9 +9,6 @@ use bevy_kira_audio::AudioPlugin;
 
 mod tests;
 
-mod firstperson;
-pub use firstperson::*;
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash, States, Default, ScheduleLabel)]
 enum GameState {
     #[default]
@@ -36,11 +33,11 @@ fn main() {
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(AudioPlugin)
         .add_systems(OnEnter(GameState::Loading), load_assets)
-        .add_systems(GameState::MainMenu, main_menu)
-        .add_systems(GameState::Running, esc_pause)
-        .add_systems(GameState::Paused, esc_pause)
-        .add_systems(GameState::Paused, pause_menu)
-        .add_systems(GameState::Quit, exit_system)
+        .add_systems(Update, main_menu.run_if(in_state(GameState::MainMenu)))
+        .add_systems(Update, esc_pause.run_if(in_state(GameState::Running)))
+        .add_systems(Update, esc_pause.run_if(in_state(GameState::Paused)))
+        .add_systems(Update, pause_menu.run_if(in_state(GameState::Paused)))
+        .add_systems(OnEnter(GameState::Quit), exit_system)
         .run();
 }
 
