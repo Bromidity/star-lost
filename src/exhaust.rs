@@ -1,10 +1,11 @@
 use bevy::{
-    app::{Plugin, Startup, Update},
+    app::{Plugin, Startup, Update, FixedUpdate},
     asset::{AssetServer, Assets, Handle},
     core::Name,
     ecs::{
+        component::Component,
         entity::Entity,
-        query::{Added, With},
+        query::Added,
         schedule::{common_conditions::in_state, IntoSystemConfigs},
         system::{Commands, Query, Res, ResMut, Resource},
     },
@@ -12,17 +13,24 @@ use bevy::{
     log::info,
     math::{Vec2, Vec3, Vec4},
     render::texture::Image,
-    transform::components::Transform,
+    transform::components::{GlobalTransform, Transform}, time::Time,
 };
 use bevy_hanabi::{
     Attribute, ColorOverLifetimeModifier, CompiledParticleEffect, EffectAsset, ExprWriter,
     Gradient, ImageSampleMapping, OrientMode, OrientModifier, ParticleEffect, ParticleEffectBundle,
-    ParticleTextureModifier, SetAttributeModifier, SetPositionSphereModifier,
-    SetVelocityTangentModifier, ShapeDimension, SizeOverLifetimeModifier, Spawner,
+    ParticleTextureModifier, SetAttributeModifier, SizeOverLifetimeModifier, Spawner, accel, EffectSpawner,
 };
 use log::debug;
 
-use crate::{physics::Acceleration, thrust::AnimatedThruster, GameState};
+use crate::{
+    physics::{Acceleration, Velocity},
+    GameState,
+};
+
+#[derive(Clone, Component)]
+pub struct ExhaustVelocity {
+    parent_entity: Entity,
+}
 
 #[derive(Default, Clone, Resource)]
 struct ExhaustEffect {
@@ -35,6 +43,7 @@ impl Plugin for ExhaustPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(ExhaustEffect::default())
             .add_systems(Startup, create_exhaust_effect)
+            .add_systems(Update, update_exhaust_velocity)
             .add_systems(
                 Update,
                 associate_exhaust_effect_with_thruster.run_if(in_state(GameState::Running)),
@@ -50,14 +59,14 @@ fn create_exhaust_effect(
     let particle_texture: Handle<Image> = asset_server.load("images/cloud.png");
 
     let mut color_gradient = Gradient::new();
-    color_gradient.add_key(0.0, Vec4::new(1.0, 1.0, 1.0, 0.0));
-    color_gradient.add_key(0.05, Vec4::new(1.0, 1.0, 1.0, 1.0));
-    color_gradient.add_key(0.95, Vec4::new(1.0, 1.0, 1.0, 1.0));
+    color_gradient.add_key(0.0, Vec4::new(0.2, 0.2, 1.0, 0.0));
+    color_gradient.add_key(0.1, Vec4::new(0.2, 0.2, 1.0, 0.8));
+    color_gradient.add_key(0.3, Vec4::new(1.0, 0.4, 0.4, 0.5));
     color_gradient.add_key(1.0, Vec4::new(1.0, 1.0, 1.0, 0.0));
 
     let mut size_gradient = Gradient::new();
-    size_gradient.add_key(0.0, Vec2::new(0.0, 0.0));
-    size_gradient.add_key(0.1, Vec2::new(0.01, 0.01));
+    size_gradient.add_key(0.0, Vec2::new(0.03, 0.03));
+    size_gradient.add_key(0.8, Vec2::new(0.1, 0.1));
     size_gradient.add_key(1.0, Vec2::new(0.0, 0.0));
 
     let writer = ExprWriter::new();
@@ -74,12 +83,14 @@ fn create_exhaust_effect(
         gradient: color_gradient,
     };
 
-    let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, writer.lit(10.0).expr());
+    let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, writer.lit(1.0).expr());
 
-    let init_velocity = SetAttributeModifier::new(Attribute::VELOCITY, writer.lit(-Vec3::Z).expr());
+    let exhaust_velocity = writer.prop("exhaust_velocity").expr();
+    let init_velocity = SetAttributeModifier::new(Attribute::VELOCITY, exhaust_velocity);
 
-    let effect = EffectAsset::new(100, Spawner::rate(10.0.into()), writer.finish())
+    let effect = EffectAsset::new(100000, Spawner::rate(2500.0.into()).with_starts_active(false), writer.finish())
         .with_name("emit:exhaust")
+        .with_property("exhaust_velocity", Vec3::ZERO.into())
         .init(init_position)
         .init(init_velocity)
         .init(init_lifetime)
@@ -91,8 +102,7 @@ fn create_exhaust_effect(
         .render(ParticleTextureModifier {
             texture: particle_texture,
             sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
-        })
-        .with_simulation_space(bevy_hanabi::SimulationSpace::Global);
+        });
 
     info!("Exhaust effect created: {:#?}", effect.properties());
     exhaust_handle.handle = effects.add(effect);
@@ -130,13 +140,37 @@ fn associate_exhaust_effect_with_thruster(
                 );
 
                 let effect = commands
-                    .spawn(ParticleEffectBundle {
-                        effect: ParticleEffect::new(exhaust.handle.clone()),
-                        ..Default::default()
-                    })
+                    .spawn((
+                        ParticleEffectBundle {
+                            effect: ParticleEffect::new(exhaust.handle.clone()),
+                            transform: Transform::from_translation(transform.translation),
+                            ..Default::default()
+                        },
+                        ExhaustVelocity {
+                            parent_entity: ship,
+                        },
+                    ))
                     .id();
 
                 commands.entity(ship).add_child(effect);
+            }
+        }
+    }
+}
+
+fn update_exhaust_velocity(
+    time: Res<Time>,
+    simulated_entities: Query<(&GlobalTransform, &Velocity, &Acceleration)>,
+    mut query: Query<(&mut CompiledParticleEffect, &mut EffectSpawner, &ExhaustVelocity)>,
+) {
+    for (mut compiled, mut spawner, exhaust) in query.iter_mut() {
+        if let Ok((transform, velocity, acceleration)) = simulated_entities.get(exhaust.parent_entity) {
+            if acceleration.length_squared() > 0.1 {
+                let velocity = -transform.forward() * 2.0 + transform.right() * (time.elapsed_seconds_wrapped() % 0.01 - 0.005) * 20.0;
+                compiled.set_property("exhaust_velocity", velocity.into());
+                spawner.set_active(true);
+            } else {
+                spawner.set_active(false);
             }
         }
     }

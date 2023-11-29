@@ -17,7 +17,7 @@ impl Plugin for DustPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(HanabiPlugin)
             .add_systems(OnEnter(GameState::Running), create_space_dust)
-            .add_systems(Update, parent_dust_emitter_to_camera);
+            .add_systems(FixedUpdate, parent_dust_emitter_to_camera);
     }
 }
 
