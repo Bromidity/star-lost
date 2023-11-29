@@ -4,7 +4,7 @@ use crate::{impulse::*, physics::*, tracking::*};
 
 #[allow(dead_code)]
 pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let model = asset_server.load("models/ship.glb#Scene0");
+    let model = asset_server.load("models/ship_small_thrust.glb#Scene0");
 
     let id = {
         // Leader
@@ -16,7 +16,7 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
                     rot: Vec3::from_slice(&[0.01, 0.01, 0.01]),
                 },
                 physics: PhysicsBundle {
-                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -5.0])),
+                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -0.5])),
                     ..Default::default()
                 },
                 spatial: SpatialBundle {

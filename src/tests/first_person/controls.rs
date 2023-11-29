@@ -1,6 +1,6 @@
 use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 
-use crate::{impulse::*, physics::*};
+use crate::{impulse::*, physics::*, controls::PlayerControlled};
 
 #[allow(dead_code)]
 pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -22,6 +22,7 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
             },
             ..Default::default()
         })
+        .insert(PlayerControlled)
         .with_children(|parent| {
             parent.spawn(SceneBundle {
                 scene: model.clone(),
@@ -29,7 +30,7 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
             });
             parent.spawn(Camera3dBundle {
                 tonemapping: Tonemapping::TonyMcMapface,
-                transform: Transform::from_xyz(0.0, 5.0, 0.0)
+                transform: Transform::from_xyz(0.0, 1.0, 0.0)
                     .looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
                 ..Default::default()
             });
