@@ -1,6 +1,6 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 
-use crate::impulse::{Impulse, AngularImpulse};
+use crate::impulse::{AngularImpulse, Impulse};
 
 /// Marks an entity as controlled by the player, meaning [ship_translational_movement_system]
 /// and [ship_rotational_movement_system] will attempt to apply [Impulse] and [AngularImpulse]
@@ -14,29 +14,15 @@ impl Plugin for ControlsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, ship_translational_movement_system)
             .add_systems(FixedUpdate, ship_rotational_movement_system);
-        //.add_systems(FixedUpdate, ship_rotational_movement_system);
         //.add_system(animate_ship_camera_effects)
         //.add_startup_system(initial_grab_cursor)
         //.init_resource::<ManualEventReader<MouseMotion>>();
     }
 }
-/*
-fn initial_grab_cursor(window_query: Query<&Window, With<PrimaryWindow>>) {
-    if let Some(window) =  window_query.get_single_mut().ok() {
-        window.cursor.grab_mode = CursorGrabMode::Confined,
-        window.set_cursor_lock_mode(false);
-        //window.set_cursor_visibility(false);
-        window.set_cursor_position(Some(Vec2::from_slice(&[
-            window.width() / 2.0,
-            window.height() / 2.0,
-        ])));
-    }
-}
- */
 
 /// Set entities with [PlayerControlled] component's [Impulse] component values based on user input.
-/// Default: `W`, `A`, `S`, `D` for strafe impulses, `LShift` and `LControl` for forwards/backwards acceleration respectively.
-pub fn ship_translational_movement_system(
+/// Default: `W` and `S` for acceleration impulses.
+fn ship_translational_movement_system(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Impulse, &Transform), With<PlayerControlled>>,
 ) {
@@ -44,12 +30,8 @@ pub fn ship_translational_movement_system(
         let mut new_impulse = Vec3::ZERO;
         for key in keys.get_pressed() {
             new_impulse += match key {
-                KeyCode::W => Vec3::from_slice(&[0.0, 1.0, 0.0]),
-                //KeyCode::A => Vec3::from_slice(&[-1.0, 0.0, 0.0]),
-                KeyCode::S => Vec3::from_slice(&[0.0, -1.0, 0.0]),
-                //KeyCode::D => Vec3::from_slice(&[1.0, 0.0, 0.0]),
-                KeyCode::ShiftLeft => Vec3::from_slice(&[0.0, 0.0, -5.0]),
-                KeyCode::ControlLeft => Vec3::from_slice(&[0.0, 0.0, 20.0]),
+                KeyCode::W => Vec3::from_slice(&[0.0, 0.0, -1.0]),
+                KeyCode::S => Vec3::from_slice(&[0.0, 0.0, 1.0]),
                 _ => Vec3::ZERO,
             };
         }
@@ -58,29 +40,22 @@ pub fn ship_translational_movement_system(
     }
 }
 
-pub fn ship_rotational_movement_system(
-    window_query: Query<&Window, With<PrimaryWindow>>,
+/// Rotates the [PlayerControlled] ship around its own axis when A or D is pressed.
+fn ship_rotational_movement_system(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut AngularImpulse, &Transform), With<PlayerControlled>>,
+    mut query: Query<&mut AngularImpulse, With<PlayerControlled>>,
 ) {
-    if let Some(window) = window_query.get_single().ok() {
-        for (mut impulse, transform) in query.iter_mut() {
-
-            let mut new_impulse = Vec3::ZERO;
-            for key in keys.get_pressed() {
-                new_impulse += match key {
-                    //KeyCode::W => Vec3::from_slice(&[0.0, 1.0, 0.0]),
-                    KeyCode::A => Vec3::from_slice(&[0.0, 1.0, 0.0]),
-                    //KeyCode::S => Vec3::from_slice(&[0.0, -1.0, 0.0]),
-                    KeyCode::D => Vec3::from_slice(&[0.0, -1.0, 0.0]),
-                    //KeyCode::ShiftLeft => Vec3::from_slice(&[0.0, 0.0, -5.0]),
-                    //KeyCode::ControlLeft => Vec3::from_slice(&[0.0, 0.0, 20.0]),
-                    _ => Vec3::ZERO,
-                };
-            }
-    
-            *impulse = AngularImpulse(new_impulse * 10.0);
+    for mut impulse in query.iter_mut() {
+        let mut new_impulse = Vec3::ZERO;
+        for key in keys.get_pressed() {
+            new_impulse += match key {
+                KeyCode::A => Vec3::from_slice(&[0.0, 1.0, 0.0]),
+                KeyCode::D => Vec3::from_slice(&[0.0, -1.0, 0.0]),
+                _ => Vec3::ZERO,
+            };
         }
+
+        *impulse = AngularImpulse(new_impulse * 10.0);
     }
 }
 

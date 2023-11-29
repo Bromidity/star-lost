@@ -3,10 +3,10 @@ use bevy::{
     prelude::*,
 };
 use bevy_hanabi::{
-    Attribute, ColorOverLifetimeModifier, CpuValue, EffectAsset, ExprWriter, Gradient,
-    HanabiPlugin, ImageSampleMapping, OrientMode, OrientModifier, ParticleEffect,
-    ParticleEffectBundle, ParticleTextureModifier, SetAttributeModifier, SetPositionSphereModifier,
-    ShapeDimension, SizeOverLifetimeModifier, Spawner,
+    Attribute, ColorOverLifetimeModifier, EffectAsset, ExprWriter, Gradient, HanabiPlugin,
+    ImageSampleMapping, OrientMode, OrientModifier, ParticleEffect, ParticleEffectBundle,
+    ParticleTextureModifier, SetAttributeModifier, SetPositionSphereModifier, ShapeDimension,
+    SizeOverLifetimeModifier, Spawner,
 };
 
 use crate::{controls::PlayerControlled, GameState};

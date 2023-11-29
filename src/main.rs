@@ -1,4 +1,7 @@
-use bevy::{app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*};
+use bevy::{
+    app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*,
+    render::camera::CameraPlugin,
+};
 use bevy_egui::{
     egui::{self, Label},
     EguiContexts, EguiPlugin,
@@ -6,12 +9,14 @@ use bevy_egui::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use bevy_kira_audio::AudioPlugin;
+use camera::TrackingCameraPlugin;
 use controls::ControlsPlugin;
 use dust::DustPlugin;
 use impulse::ImpulsePlugin;
 use physics::PhysicsPlugin;
 use thrust::ThrustPlugin;
 
+mod camera;
 mod controls;
 mod dust;
 mod impulse;
@@ -48,6 +53,7 @@ fn main() {
         .add_plugins(ControlsPlugin)
         .add_plugins(ImpulsePlugin)
         .add_plugins(DustPlugin)
+        .add_plugins(TrackingCameraPlugin)
         .add_systems(OnEnter(GameState::Loading), load_assets)
         .add_systems(Update, main_menu.run_if(in_state(GameState::MainMenu)))
         .add_systems(Update, esc_pause.run_if(in_state(GameState::Running)))
@@ -56,7 +62,7 @@ fn main() {
         .add_systems(OnEnter(GameState::Quit), exit_system)
         .add_systems(
             OnEnter(GameState::Running),
-            (tests::first_person::controls::spawn_player_ship,),
+            (tests::first_person::camera::spawn_player_ship,),
         )
         .run();
 }
