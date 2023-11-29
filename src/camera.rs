@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, Update, FixedUpdate},
+    app::{FixedUpdate, Plugin},
     ecs::{
         component::Component,
         entity::Entity,
@@ -34,10 +34,18 @@ fn camera_movement_system(
     mut camera: Query<(Entity, &mut Transform), With<WorldCamera>>,
 ) {
     for (camera_id, mut camera_pos) in camera.iter_mut() {
-        for (position, tracker) in target_entities.iter() {
+        let mut targets = target_entities
+            .iter()
+            .filter(|(_, tracker)| tracker.camera == camera_id);
+
+        if let Some((position, tracker)) = targets.next() {
             if tracker.camera == camera_id {
                 camera_pos.translation = position.translation() + Vec3::new(0.0, 5.0, 0.0)
             }
+        }
+
+        if targets.next().is_some() {
+            panic!("Multiple entities contain TrackedByCamera components with the same camera id {camera_id:#?}");
         }
     }
 }

@@ -1,7 +1,4 @@
-use bevy::{
-    app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*,
-    render::camera::CameraPlugin,
-};
+use bevy::{app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*};
 use bevy_egui::{
     egui::{self, Label},
     EguiContexts, EguiPlugin,
