@@ -46,7 +46,7 @@ fn create_space_dust(
 
     let init_position = SetPositionSphereModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        radius: writer.lit(5.0).expr(),
+        radius: writer.lit(10.0).expr(),
         dimension: ShapeDimension::Volume,
     };
 
@@ -88,7 +88,7 @@ fn create_space_dust(
     commands.spawn((
         DustEmitter,
         ParticleEffectBundle {
-            transform: Transform::from_xyz(0.0, -5.0, 0.0),
+            transform: Transform::from_xyz(0.0, -10.0, 0.0),
             effect: ParticleEffect::new(effect.clone()),
             ..Default::default()
         },
