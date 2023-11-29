@@ -110,9 +110,6 @@ fn create_exhaust_effect(
     .render(OrientModifier {
         mode: OrientMode::ParallelCameraDepthPlane,
     })
-    .render(OrientModifier {
-        mode: OrientMode::AlongVelocity,
-    })
     .render(ParticleTextureModifier {
         texture: particle_texture,
         sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
