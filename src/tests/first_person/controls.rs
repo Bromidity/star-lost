@@ -1,6 +1,6 @@
 use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 
-use crate::{impulse::*, physics::*, controls::PlayerControlled};
+use crate::{controls::PlayerControlled, impulse::*, physics::*};
 
 #[allow(dead_code)]
 pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>) {

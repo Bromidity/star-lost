@@ -16,11 +16,11 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
                     rot: Vec3::from_slice(&[0.01, 0.01, 0.01]),
                 },
                 physics: PhysicsBundle {
-                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -0.5])),
+                    velocity: Velocity(Vec3::from_slice(&[0.0, 0.0, -0.0])),
                     ..Default::default()
                 },
                 spatial: SpatialBundle {
-                    transform: Transform::from_xyz(0.0, 0.0, 0.0),
+                    transform: Transform::from_xyz(0.2, 0.0, 0.0),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -37,14 +37,14 @@ pub fn spawn_tracking_ships(mut commands: Commands, asset_server: Res<AssetServe
     // Follower
     commands
         .spawn(ShipBundle {
-            impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.5])),
+            impulse: Impulse(Vec3::from_slice(&[0.0, 0.0, -0.0])),
             thrust_characteristics: ThrustCharacteristics {
-                min: Vec3::from_slice(&[-1.0, -1.0, -10.0]),
-                max: Vec3::from_slice(&[1.0, 1.0, 1.0]),
-                rot: Vec3::from_slice(&[100.0, 100.0, 100.0]),
+                min: Vec3::from_slice(&[-1.0, -2.0, -1.0]),
+                max: Vec3::from_slice(&[1.0, 2.0, 1.0]),
+                rot: Vec3::from_slice(&[0.01, 0.01, 0.01]),
             },
             spatial: SpatialBundle {
-                transform: Transform::from_xyz(20.0, -0.0, -0.0).with_rotation(Quat::from_euler(
+                transform: Transform::from_xyz(0.1, -0.0, -0.0).with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
                     0.0,
                     1.0,
