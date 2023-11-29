@@ -97,7 +97,7 @@ fn create_exhaust_effect(
 
     let effect = EffectAsset::new(
         100,
-        Spawner::rate(100.0.into()).with_starts_active(false),
+        Spawner::rate(50.0.into()).with_starts_active(false),
         writer.finish(),
     )
     .with_name("emit:exhaust")

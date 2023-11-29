@@ -39,7 +39,7 @@ fn create_space_dust(
 
     let mut size_gradient = Gradient::new();
     size_gradient.add_key(0.0, Vec2::new(0.0, 0.0));
-    size_gradient.add_key(0.1, Vec2::new(0.01, 0.01));
+    size_gradient.add_key(0.1, Vec2::new(0.02, 0.02));
     size_gradient.add_key(1.0, Vec2::new(0.0, 0.0));
 
     let writer = ExprWriter::new();
@@ -59,30 +59,26 @@ fn create_space_dust(
         gradient: color_gradient,
     };
 
-    let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, writer.lit(10.0).expr());
+    let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, writer.lit(5.0).expr());
 
     let init_velocity =
         SetAttributeModifier::new(Attribute::VELOCITY, writer.lit(Vec3::ZERO).expr());
 
     let effect = effects.add(
-        EffectAsset::new(
-            160000,
-            Spawner::burst(16000.0.into(), 1.0.into()),
-            writer.finish(),
-        )
-        .with_name("emit:dust")
-        .init(init_position)
-        .init(init_velocity)
-        .init(init_lifetime)
-        .render(color_lifetime)
-        .render(size_lifetime)
-        .render(OrientModifier {
-            mode: OrientMode::ParallelCameraDepthPlane,
-        })
-        .render(ParticleTextureModifier {
-            texture: particle_texture,
-            sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
-        }),
+        EffectAsset::new(160000, Spawner::rate(2000.0.into()), writer.finish())
+            .with_name("emit:dust")
+            .init(init_position)
+            .init(init_velocity)
+            .init(init_lifetime)
+            .render(color_lifetime)
+            .render(size_lifetime)
+            .render(OrientModifier {
+                mode: OrientMode::ParallelCameraDepthPlane,
+            })
+            .render(ParticleTextureModifier {
+                texture: particle_texture,
+                sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
+            }),
     );
 
     commands.spawn((
