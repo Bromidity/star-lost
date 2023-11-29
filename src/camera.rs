@@ -1,5 +1,5 @@
 use bevy::{
-    app::{FixedUpdate, Plugin},
+    app::{Plugin, Update},
     ecs::{
         component::Component,
         entity::Entity,
@@ -23,7 +23,7 @@ pub struct TrackingCameraPlugin;
 
 impl Plugin for TrackingCameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(FixedUpdate, camera_movement_system)
+        app.add_systems(Update, camera_movement_system)
             .register_type::<TrackedByCamera>()
             .register_type::<WorldCamera>();
     }

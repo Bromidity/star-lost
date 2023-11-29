@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, Startup, Update, FixedUpdate},
+    app::{Plugin, Startup, Update},
     asset::{AssetServer, Assets, Handle},
     core::Name,
     ecs::{
@@ -13,12 +13,14 @@ use bevy::{
     log::info,
     math::{Vec2, Vec3, Vec4},
     render::texture::Image,
-    transform::components::{GlobalTransform, Transform}, time::Time,
+    time::Time,
+    transform::components::{GlobalTransform, Transform},
 };
 use bevy_hanabi::{
-    Attribute, ColorOverLifetimeModifier, CompiledParticleEffect, EffectAsset, ExprWriter,
-    Gradient, ImageSampleMapping, OrientMode, OrientModifier, ParticleEffect, ParticleEffectBundle,
-    ParticleTextureModifier, SetAttributeModifier, SizeOverLifetimeModifier, Spawner, accel, EffectSpawner,
+    Attribute, ColorOverLifetimeModifier, CompiledParticleEffect, EffectAsset, EffectSpawner,
+    ExprWriter, Gradient, ImageSampleMapping, OrientMode, OrientModifier, ParticleEffect,
+    ParticleEffectBundle, ParticleTextureModifier, SetAttributeModifier, SetPositionSphereModifier,
+    SizeOverLifetimeModifier, Spawner,
 };
 use log::debug;
 
@@ -60,19 +62,24 @@ fn create_exhaust_effect(
 
     let mut color_gradient = Gradient::new();
     color_gradient.add_key(0.0, Vec4::new(0.2, 0.2, 1.0, 0.0));
-    color_gradient.add_key(0.1, Vec4::new(0.2, 0.2, 1.0, 0.8));
-    color_gradient.add_key(0.3, Vec4::new(1.0, 0.4, 0.4, 0.5));
+    color_gradient.add_key(0.1, Vec4::new(0.2, 0.2, 1.0, 0.2));
+    color_gradient.add_key(0.2, Vec4::new(0.2, 0.2, 1.0, 0.5));
+    color_gradient.add_key(0.5, Vec4::new(1.0, 0.4, 0.4, 0.2));
     color_gradient.add_key(1.0, Vec4::new(1.0, 1.0, 1.0, 0.0));
 
     let mut size_gradient = Gradient::new();
-    size_gradient.add_key(0.0, Vec2::new(0.03, 0.03));
+    size_gradient.add_key(0.0, Vec2::new(0.0, 0.0));
+    size_gradient.add_key(0.1, Vec2::new(0.03, 0.03));
     size_gradient.add_key(0.8, Vec2::new(0.1, 0.1));
     size_gradient.add_key(1.0, Vec2::new(0.0, 0.0));
 
     let writer = ExprWriter::new();
 
-    let init_position =
-        SetAttributeModifier::new(Attribute::POSITION, writer.lit(Vec3::ZERO).expr());
+    let init_position = SetPositionSphereModifier {
+        center: writer.lit(Vec3::ZERO).expr(),
+        radius: writer.lit(0.01).expr(),
+        dimension: bevy_hanabi::ShapeDimension::Volume,
+    };
 
     let size_lifetime = SizeOverLifetimeModifier {
         gradient: size_gradient,
@@ -88,21 +95,28 @@ fn create_exhaust_effect(
     let exhaust_velocity = writer.prop("exhaust_velocity").expr();
     let init_velocity = SetAttributeModifier::new(Attribute::VELOCITY, exhaust_velocity);
 
-    let effect = EffectAsset::new(100000, Spawner::rate(2500.0.into()).with_starts_active(false), writer.finish())
-        .with_name("emit:exhaust")
-        .with_property("exhaust_velocity", Vec3::ZERO.into())
-        .init(init_position)
-        .init(init_velocity)
-        .init(init_lifetime)
-        .render(color_lifetime)
-        .render(size_lifetime)
-        .render(OrientModifier {
-            mode: OrientMode::ParallelCameraDepthPlane,
-        })
-        .render(ParticleTextureModifier {
-            texture: particle_texture,
-            sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
-        });
+    let effect = EffectAsset::new(
+        100000,
+        Spawner::rate(2500.0.into()).with_starts_active(false),
+        writer.finish(),
+    )
+    .with_name("emit:exhaust")
+    .with_property("exhaust_velocity", Vec3::ZERO.into())
+    .init(init_position)
+    .init(init_velocity)
+    .init(init_lifetime)
+    .render(color_lifetime)
+    .render(size_lifetime)
+    .render(OrientModifier {
+        mode: OrientMode::ParallelCameraDepthPlane,
+    })
+    .render(OrientModifier {
+        mode: OrientMode::AlongVelocity,
+    })
+    .render(ParticleTextureModifier {
+        texture: particle_texture,
+        sample_mapping: ImageSampleMapping::ModulateOpacityFromR,
+    });
 
     info!("Exhaust effect created: {:#?}", effect.properties());
     exhaust_handle.handle = effects.add(effect);
@@ -114,7 +128,7 @@ fn associate_exhaust_effect_with_thruster(
     mut commands: Commands,
     exhaust: Res<ExhaustEffect>,
     parents: Query<(Option<&Parent>, Option<&Acceleration>)>,
-    potential_thrusters: Query<(Entity, &Transform, &Name, &Parent), Added<Name>>,
+    potential_thrusters: Query<(&Transform, &Name, &Parent), Added<Name>>,
 ) {
     fn find_simulated_parent(
         parents: &Query<(Option<&Parent>, Option<&Acceleration>)>,
@@ -131,7 +145,7 @@ fn associate_exhaust_effect_with_thruster(
         }
     }
 
-    for (thruster, transform, name, parent) in potential_thrusters.iter() {
+    for (transform, name, parent) in potential_thrusters.iter() {
         if name.as_str().contains("anim_thrust_z_neg") {
             if let Some(ship) = find_simulated_parent(&parents, parent.get()) {
                 debug!(
@@ -161,12 +175,20 @@ fn associate_exhaust_effect_with_thruster(
 fn update_exhaust_velocity(
     time: Res<Time>,
     simulated_entities: Query<(&GlobalTransform, &Velocity, &Acceleration)>,
-    mut query: Query<(&mut CompiledParticleEffect, &mut EffectSpawner, &ExhaustVelocity)>,
+    mut query: Query<(
+        &mut CompiledParticleEffect,
+        &mut EffectSpawner,
+        &ExhaustVelocity,
+    )>,
 ) {
     for (mut compiled, mut spawner, exhaust) in query.iter_mut() {
-        if let Ok((transform, velocity, acceleration)) = simulated_entities.get(exhaust.parent_entity) {
+        if let Ok((transform, velocity, acceleration)) =
+            simulated_entities.get(exhaust.parent_entity)
+        {
             if acceleration.length_squared() > 0.1 {
-                let velocity = -transform.forward() * 2.0 + transform.right() * (time.elapsed_seconds_wrapped() % 0.01 - 0.005) * 20.0;
+                let velocity = -transform.forward() * 0.5
+                    + velocity.0 * 0.5
+                    + transform.right() * (time.elapsed_seconds_wrapped() % 0.01 - 0.005) * 20.0;
                 compiled.set_property("exhaust_velocity", velocity.into());
                 spawner.set_active(true);
             } else {
