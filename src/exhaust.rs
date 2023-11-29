@@ -77,7 +77,7 @@ fn create_exhaust_effect(
 
     let init_position = SetPositionSphereModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        radius: writer.lit(0.01).expr(),
+        radius: writer.lit(0.03).expr(),
         dimension: bevy_hanabi::ShapeDimension::Volume,
     };
 
@@ -96,8 +96,8 @@ fn create_exhaust_effect(
     let init_velocity = SetAttributeModifier::new(Attribute::VELOCITY, exhaust_velocity);
 
     let effect = EffectAsset::new(
-        100000,
-        Spawner::rate(2500.0.into()).with_starts_active(false),
+        100,
+        Spawner::rate(100.0.into()).with_starts_active(false),
         writer.finish(),
     )
     .with_name("emit:exhaust")
