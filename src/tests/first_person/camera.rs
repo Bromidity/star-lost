@@ -45,7 +45,10 @@ pub fn spawn_player_ship(mut commands: Commands, asset_server: Res<AssetServer>)
                 ..Default::default()
             },
             PlayerControlled,
-            TrackedByCamera { camera },
+            TrackedByCamera {
+                camera,
+                height: 5.0,
+            },
         ))
         .with_children(|parent| {
             parent.spawn(SceneBundle {
