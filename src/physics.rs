@@ -71,21 +71,24 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (acceleration_system, velocity_system).chain())
-            .add_systems(
-                FixedUpdate,
-                (
-                    angular_acceleration_system,
-                    angular_drag_system,
-                    angular_velocity_system,
-                )
-                    .chain(),
+        app.add_systems(
+            FixedUpdate,
+            (acceleration_system, drag_system, velocity_system).chain(),
+        )
+        .add_systems(
+            FixedUpdate,
+            (
+                angular_acceleration_system,
+                angular_drag_system,
+                angular_velocity_system,
             )
-            .register_type::<Drag>()
-            .register_type::<Velocity>()
-            .register_type::<Acceleration>()
-            .register_type::<AngularVelocity>()
-            .register_type::<AngularAcceleration>();
+                .chain(),
+        )
+        .register_type::<Drag>()
+        .register_type::<Velocity>()
+        .register_type::<Acceleration>()
+        .register_type::<AngularVelocity>()
+        .register_type::<AngularAcceleration>();
         // .add_plugin(DebuggableValue::<Transform>::default())
         // .add_plugin(DebuggableValue::<Velocity>::default())
         // .add_plugin(DebuggableValue::<Acceleration>::default())
