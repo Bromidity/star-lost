@@ -1,13 +1,15 @@
 use bevy::{
-    app::{Plugin, Update},
+    app::{FixedUpdate, Plugin},
     ecs::{
         component::Component,
         entity::Entity,
         query::{With, Without},
-        system::Query,
+        schedule::IntoSystemConfigs,
+        system::{Query, Res},
     },
     math::Vec3,
     reflect::Reflect,
+    time::Time,
     transform::components::{GlobalTransform, Transform},
 };
 
@@ -23,13 +25,17 @@ pub struct TrackingCameraPlugin;
 
 impl Plugin for TrackingCameraPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, camera_movement_system)
-            .register_type::<TrackedByCamera>()
-            .register_type::<WorldCamera>();
+        app.add_systems(
+            FixedUpdate,
+            camera_movement_system.after(crate::physics::velocity_system),
+        )
+        .register_type::<TrackedByCamera>()
+        .register_type::<WorldCamera>();
     }
 }
 
 fn camera_movement_system(
+    time: Res<Time>,
     target_entities: Query<(&GlobalTransform, &TrackedByCamera), Without<WorldCamera>>,
     mut camera: Query<(Entity, &mut Transform), With<WorldCamera>>,
 ) {
@@ -40,7 +46,10 @@ fn camera_movement_system(
 
         if let Some((position, tracker)) = targets.next() {
             if tracker.camera == camera_id {
-                camera_pos.translation = position.translation() + Vec3::new(0.0, 5.0, 0.0)
+                camera_pos.translation = camera_pos.translation.lerp(
+                    position.translation() + Vec3::new(0.0, 5.0, 0.0),
+                    time.delta_seconds() * 10.0,
+                );
             }
         }
 

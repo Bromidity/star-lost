@@ -1,4 +1,6 @@
-use bevy::{app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*};
+use bevy::{
+    app::AppExit, ecs::schedule::ScheduleLabel, pbr::AmbientLight, prelude::*, window::PresentMode,
+};
 use bevy_egui::{
     egui::{self, Label},
     EguiContexts, EguiPlugin,
@@ -42,7 +44,17 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(Msaa::Sample4)
-        .add_plugins(DefaultPlugins.set(AssetPlugin::default()))
+        .add_plugins(
+            DefaultPlugins
+                .set(AssetPlugin::default())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        present_mode: PresentMode::AutoNoVsync,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+        )
         .add_state::<GameState>()
         .add_plugins(EguiPlugin)
         .add_plugins(WorldInspectorPlugin::new())

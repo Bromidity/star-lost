@@ -71,11 +71,16 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, drag_system)
-            .add_systems(Update, acceleration_system)
-            .add_systems(Update, velocity_system)
-            .add_systems(Update, angular_velocity_system)
-            .add_systems(Update, angular_acceleration_system)
+        app.add_systems(FixedUpdate, (acceleration_system, velocity_system).chain())
+            .add_systems(
+                FixedUpdate,
+                (
+                    angular_acceleration_system,
+                    angular_drag_system,
+                    angular_velocity_system,
+                )
+                    .chain(),
+            )
             .register_type::<Drag>()
             .register_type::<Velocity>()
             .register_type::<Acceleration>()
@@ -94,7 +99,6 @@ impl Plugin for PhysicsPlugin {
 /// Integrates the [Velocity] into the entity [Transform]'s translational component
 pub fn velocity_system(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
     for (mut transform, velocity) in query.iter_mut() {
-        //let translated_velocity = transform.rotation * velocity.0;
         transform.translation += velocity.0 * time.delta_seconds();
     }
 }
@@ -119,13 +123,19 @@ pub fn angular_velocity_system(
 /// I think timestep might affect this strangely. Assuming a 0.5s frametime, the system
 /// will halve the velocities of the entity, whereas a frametime >= 1.0 will immediately stop or
 /// even reverse the velocity of the object.
-pub fn drag_system(
-    time: Res<Time>,
-    mut query: Query<(&mut Velocity, &mut AngularVelocity, &Drag)>,
-) {
-    for (mut velocity, mut angular_velocity, drag) in query.iter_mut() {
+pub fn drag_system(time: Res<Time>, mut query: Query<(&mut Velocity, &Drag)>) {
+    for (mut velocity, drag) in query.iter_mut() {
         velocity.0 = velocity.0.lerp(Vec3::ZERO, drag.0 * time.delta_seconds());
+    }
+}
 
+/// Linearly interpolates between ([Velocity] & [AngularVelocity]) and [Vec3::ZERO]
+/// by a factor of [Drag] * `time.delta_seconds()`, effectively slowing the respective velocities.
+/// I think timestep might affect this strangely. Assuming a 0.5s frametime, the system
+/// will halve the velocities of the entity, whereas a frametime >= 1.0 will immediately stop or
+/// even reverse the velocity of the object.
+pub fn angular_drag_system(time: Res<Time>, mut query: Query<(&mut AngularVelocity, &Drag)>) {
+    for (mut angular_velocity, drag) in query.iter_mut() {
         angular_velocity.0 = angular_velocity
             .0
             .lerp(Vec3::ZERO, drag.0 * time.delta_seconds());
